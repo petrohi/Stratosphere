@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{150ED8D5-5084-4BBB-A45A-9AE63C6BB8D7}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Stratosphere</RootNamespace>
+    <AssemblyName>Stratosphere</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Stratosphere\Aws\AmazonActionBuilder.cs" />
+    <Compile Include="Stratosphere\Aws\AmazonWebService.cs" />
+    <Compile Include="Stratosphere\Aws\AmazonWebService.Sign.cs" />
+    <Compile Include="Stratosphere\Aws\AmazonException.cs" />
+    <Compile Include="Stratosphere\Aws\AmazonReliability.cs" />
+    <Compile Include="Stratosphere\Aws\AmazonParametersBuilder.cs" />
+    <Compile Include="Stratosphere\Block\Container.cs" />
+    <Compile Include="Stratosphere\Block\Block.cs" />
+    <Compile Include="Stratosphere\Block\FileSystem\FileSystemBlock.cs" />
+    <Compile Include="Stratosphere\Block\FileSystem\FileSystemContainer.Configure.cs" />
+    <Compile Include="Stratosphere\Block\FileSystem\FileSystemContainer.cs" />
+    <Compile Include="Stratosphere\Block\S3\S3Base.cs" />
+    <Compile Include="Stratosphere\Block\S3\S3Block.cs" />
+    <Compile Include="Stratosphere\Block\S3\S3Container.Configure.cs" />
+    <Compile Include="Stratosphere\Block\S3\S3Container.cs" />
+    <Compile Include="Stratosphere\Block\S3\S3Service.cs" />
+    <Compile Include="Stratosphere\Block\ContainerConfiguration.cs" />
+    <Compile Include="Stratosphere\Queue\DelayedQueue.cs" />
+    <Compile Include="Stratosphere\Queue\Queue.cs" />
+    <Compile Include="Stratosphere\Queue\QueueConfiguration.cs" />
+    <Compile Include="Stratosphere\Queue\QueueExtension.cs" />
+    <Compile Include="Stratosphere\Queue\Receipt.cs" />
+    <Compile Include="Stratosphere\Queue\Sqs\SqsQueue.Configure.cs" />
+    <Compile Include="Stratosphere\Queue\Sqs\SqsQueue.cs" />
+    <Compile Include="Stratosphere\Queue\Sqs\SqsService.cs" />
+    <Compile Include="Stratosphere\Table\Condition.cs" />
+    <Compile Include="Stratosphere\Table\DelayedTable.cs" />
+    <Compile Include="Stratosphere\Table\Sdb\SdbService.cs" />
+    <Compile Include="Stratosphere\Table\Sdb\SdbTable.Configure.cs" />
+    <Compile Include="Stratosphere\Table\Sdb\SdbTable.cs" />
+    <Compile Include="Stratosphere\Table\Table.cs" />
+    <Compile Include="Stratosphere\Table\TableConfiguration.cs" />
+    <Compile Include="Stratosphere\Table\TableExtension.cs" />
+    <Compile Include="Stratosphere\Worker\Worker.cs" />
+    <Compile Include="Stratosphere\Worker\WorkerInstance.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\zip.cmd">
+      <Link>zip.cmd</Link>
+    </None>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>xcopy /E /C /I /R /Y /Q "$(TargetDir)*.*" "$(ProjectDir)..\Output"</PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

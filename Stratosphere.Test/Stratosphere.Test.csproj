@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{3C29CB0B-6F17-4D0C-91DA-9E8AF6ACF828}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Stratosphere.Test</RootNamespace>
+    <AssemblyName>Stratosphere.Test</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="xunit">
+      <HintPath>..\External\xUnit.NET\1.5\xunit.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Stratosphere\Aws\AmazonTest.cs" />
+    <Compile Include="Stratosphere\Queue\Test\FileSystemQueueTest.cs" />
+    <Compile Include="Stratosphere\Queue\Test\QueueTest.cs" />
+    <Compile Include="Stratosphere\Queue\Test\SqsQueueTest.cs" />
+    <Compile Include="Stratosphere\Table\Test\FileSystemTableTest.cs" />
+    <Compile Include="Stratosphere\Table\Test\SdbTableTest.cs" />
+    <Compile Include="Stratosphere\Table\Test\TableTest.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\test.cmd">
+      <Link>test.cmd</Link>
+    </None>
+    <None Include="..\test_mono_2.4.2.3.cmd">
+      <Link>test_mono_2.4.2.3.cmd</Link>
+    </None>
+    <None Include="..\test_mono_2.6.3.cmd">
+      <Link>test_mono_2.6.3.cmd</Link>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Stratosphere.FileSystem\Stratosphere.FileSystem.csproj">
+      <Project>{92DD8E9C-24D9-4E14-A142-94FB9C0EA311}</Project>
+      <Name>Stratosphere.FileSystem</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Stratosphere\Stratosphere.csproj">
+      <Project>{150ED8D5-5084-4BBB-A45A-9AE63C6BB8D7}</Project>
+      <Name>Stratosphere</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
