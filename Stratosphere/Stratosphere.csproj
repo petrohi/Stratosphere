@@ -46,6 +46,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Version.cs">
+      <Link>Version.cs</Link>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Stratosphere\Aws\AmazonActionBuilder.cs" />
     <Compile Include="Stratosphere\Aws\AmazonWebService.cs" />
@@ -55,9 +58,6 @@
     <Compile Include="Stratosphere\Aws\AmazonParametersBuilder.cs" />
     <Compile Include="Stratosphere\Block\Container.cs" />
     <Compile Include="Stratosphere\Block\Block.cs" />
-    <Compile Include="Stratosphere\Block\FileSystem\FileSystemBlock.cs" />
-    <Compile Include="Stratosphere\Block\FileSystem\FileSystemContainer.Configure.cs" />
-    <Compile Include="Stratosphere\Block\FileSystem\FileSystemContainer.cs" />
     <Compile Include="Stratosphere\Block\S3\S3Base.cs" />
     <Compile Include="Stratosphere\Block\S3\S3Block.cs" />
     <Compile Include="Stratosphere\Block\S3\S3Container.Configure.cs" />
