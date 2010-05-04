@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2010, 7Clouds. All rights reserved.
+﻿// Copyright (c) 2010 7Clouds
 
 using System;
 using System.Reflection;
@@ -25,9 +25,13 @@ namespace Stratosphere.Block
                     if (assembly != null)
                     {
                         Type type = assembly.GetType(typeName.Value);
-                        MethodInfo method = type.GetMethod("Configure", new Type[] { typeof(XElement) });
 
-                        container = method.Invoke(null, new object[] { containerConfiguration }) as IContainer;
+                        if (type != null)
+                        {
+                            MethodInfo method = type.GetMethod("Configure", new Type[] { typeof(XElement) });
+
+                            container = method.Invoke(null, new object[] { containerConfiguration }) as IContainer;
+                        }
                     }
                 }
             }

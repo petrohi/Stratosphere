@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2010, 7Clouds. All rights reserved.
+﻿// Copyright (c) 2010 7Clouds
 
 using System.Threading;
 

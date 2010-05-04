@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Stratosphere.Test")]
-[assembly: AssemblyCopyright("Copyright (c) 2010, 7Clouds. All rights reserved.")]
+[assembly: AssemblyCopyright("Copyright (c) 2010 7Clouds")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]

@@ -74,6 +74,11 @@
     <Compile Include="Stratosphere\Queue\Sqs\SqsService.cs" />
     <Compile Include="Stratosphere\Table\Condition.cs" />
     <Compile Include="Stratosphere\Table\DelayedTable.cs" />
+    <Compile Include="Stratosphere\Table\DeleteWriter.cs" />
+    <Compile Include="Stratosphere\Table\ExpectedWriter.cs" />
+    <Compile Include="Stratosphere\Table\PutWriter.cs" />
+    <Compile Include="Stratosphere\Table\Reader.cs" />
+    <Compile Include="Stratosphere\Table\ReadingState.cs" />
     <Compile Include="Stratosphere\Table\Sdb\SdbService.cs" />
     <Compile Include="Stratosphere\Table\Sdb\SdbTable.Configure.cs" />
     <Compile Include="Stratosphere\Table\Sdb\SdbTable.cs" />
