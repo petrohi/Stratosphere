@@ -14,51 +14,63 @@ using System.Xml;
 
 namespace Stratosphere.Command
 {
-    public sealed class CommandLineParser
+    public sealed class PrettyConsole
     {
-        private readonly Dictionary<string, string> _parsed = new Dictionary<string, string>();
-
-        public CommandLineParser(IEnumerable<string> keys)
+        private struct Column
         {
-            HashSet<string> keyHash = new HashSet<string>(keys);
-            string[] segments = Environment.CommandLine.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            string key = null;
-            StringBuilder builder = null;
-
-            for (int i = 0; i < segments.Length; i++)
-            {
-                if (keyHash.Contains(segments[i]))
-                {
-                    if (key != null && !_parsed.ContainsKey(key))
-                    {
-                        _parsed.Add(key, builder.ToString());
-                    }
-
-                    key = segments[i];
-                    builder = new StringBuilder();
-                }
-                else if (builder != null)
-                {
-                    if (builder.Length != 0)
-                    {
-                        builder.Append(' ');
-                    }
-
-                    builder.Append(segments[i]);
-                }
-            }
-
-            if (key != null && !_parsed.ContainsKey(key))
-            {
-                _parsed.Add(key, builder.ToString());
-            }
+            public string Name;
+            public int Width;
         }
 
-        public string Get(string key)
+        private readonly List<Column> _columns = new List<Column>();
+
+        public PrettyConsole() { }
+
+        public void AddColumn(string name, int width)
+        {
+            _columns.Add(new Column() { Name = name, Width = width });
+        }
+
+        public void WriteHeader()
+        {
+            int headerWidth = 0;
+
+            foreach (Column column in _columns)
+            {
+                Console.Write(column.Name);
+                Console.Write(new string(' ', column.Width - column.Name.Length));
+
+                headerWidth += column.Width;
+            }
+
+            Console.WriteLine();
+            Console.WriteLine(new string('-', headerWidth));
+        }
+
+        public void WriteLine(params object[] objs)
+        {
+            for (int i = 0; i < _columns.Count; i++)
+            {
+                if (i < objs.Length)
+                {
+                    string s = objs[i].ToString();
+
+                    Console.Write(s);
+                    Console.Write(new string(' ', _columns[i].Width - s.Length));
+                }
+            }
+
+            Console.WriteLine();
+        }
+    }
+
+    public abstract class CommandLineOptions
+    {
+        public string Get(string name)
         {
             string value;
 
-            if (TryGet(key, out value))
+            if (TryGet(name, out value))
             {
                 return value;
             }
@@ -66,87 +78,241 @@ namespace Stratosphere.Command
             return string.Empty;
         }
 
-        public bool TryGet(string key, out string value)
+        public abstract bool TryGet(string name, out string value);
+        public abstract bool Contains(string name);
+    }
+
+    public sealed class CommandLineParser
+    {
+        private struct Option
         {
-            return _parsed.TryGetValue(key, out value);
+            public int ArgumentCount;
+            public string HelpText;
         }
 
-        public bool Contains(string key)
+        private sealed class ParsedCommandLineOptions : CommandLineOptions
         {
-            return _parsed.ContainsKey(key);
+            private readonly Dictionary<string, string> _parsed = new Dictionary<string, string>();
+
+            public ParsedCommandLineOptions(string commandLine, Dictionary<string, Option> options)
+            {
+                string[] segments = commandLine.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                Option option;
+                string name = null;
+                StringBuilder builder = null;
+                int count = 0;
+
+                for (int i = 0; i < segments.Length; i++)
+                {
+                    if (count > 0)
+                    {
+                        if (builder.Length != 0)
+                        {
+                            builder.Append(' ');
+                        }
+
+                        builder.Append(segments[i]);
+
+                        count--;
+                    }
+                    else if (options.TryGetValue(segments[i], out option))
+                    {
+                        if (name != null && !_parsed.ContainsKey(name))
+                        {
+                            _parsed.Add(name, builder.ToString());
+
+                            name = null;
+                            builder = null;
+                            count = 0;
+                        }
+
+                        if (option.ArgumentCount != 0)
+                        {
+                            name = segments[i];
+                            builder = new StringBuilder();
+                            count = option.ArgumentCount;
+                        }
+                        else
+                        {
+                            _parsed.Add(segments[i], string.Empty);
+                        }
+                    }
+                }
+
+                if (name != null && !_parsed.ContainsKey(name))
+                {
+                    _parsed.Add(name, builder.ToString());
+                }
+            }
+
+            public override bool TryGet(string name, out string value)
+            {
+                return _parsed.TryGetValue(name, out value);
+            }
+
+            public override bool Contains(string name)
+            {
+                return _parsed.ContainsKey(name);
+            }
+        }
+
+        private readonly Dictionary<string, Option> _options = new Dictionary<string, Option>();
+
+        public CommandLineParser() { }
+
+        public void AddOption(string name, int argumentCount, string helpText)
+        {
+            _options.Add(name, new Option() { ArgumentCount = argumentCount, HelpText = helpText });
+        }
+
+        public CommandLineOptions Parse(string commandLine)
+        {
+            return new ParsedCommandLineOptions(commandLine, _options);
+        }
+
+        public void WriteOptions()
+        {
+            Console.WriteLine("Options:");
+            Console.WriteLine();
+
+            foreach (string name in _options.Keys)
+            {
+                Console.WriteLine(name);
+            }
+        }
+
+        public void WriteOptionHelp(string name)
+        {
+            Option option;
+
+            if (_options.TryGetValue(name, out option))
+            {
+                Console.WriteLine(option.HelpText);
+            }
+            else
+            {
+                Console.WriteLine("Unknown option");
+            }
         }
     }
 
     class Program
     {
-        private const string ListBucketsKey = "list-buckets";
-        private const string ListObjectsKey = "list-objects";
-        private const string ListDomainsKey = "list-domains";
-        private const string ListItemsKey = "list-items";
-        private const string ListQueuesKey = "list-queues";
-        private const string PutObjectKey = "put-object";
-        private const string GetObjectKey = "get-object";
-        private const string SaveItemsKey = "save-items";
+        private const string ListBucketsKey = "--list-buckets";
+        private const string ListObjectsKey = "--list-objects";
+        private const string ListDomainsKey = "--list-domains";
+        private const string ListItemsKey = "--list-items";
+        private const string ListQueuesKey = "--list-queues";
+        private const string PutObjectKey = "--put-object";
+        private const string GetObjectKey = "--get-object";
+        private const string SaveItemsKey = "--save-items";
+        private const string HelpKey = "--help";
         private const string FileNameKey = "--file-name";
 
-        private static readonly CommandLineParser __parser = new CommandLineParser(
-            new string[]
-            {
-                ListBucketsKey,
-                ListObjectsKey,
-                ListDomainsKey,
-                ListItemsKey,
-                ListQueuesKey,
-                PutObjectKey,
-                GetObjectKey,
-                SaveItemsKey,
-                FileNameKey
-            });
+        static Program()
+        {
+            __parser = new CommandLineParser();
+
+            __parser.AddOption(ListBucketsKey, 0, "'AwsSh " + ListBucketsKey + "'\r\nList S3 buckets");
+            __parser.AddOption(ListObjectsKey, 1, "'AwsSh " + ListObjectsKey + " <bucket URL>'\r\nList S3 objects");
+            __parser.AddOption(ListDomainsKey, 0, "'AwsSh " + ListDomainsKey + "'\r\nList SimpleDB domains");
+            __parser.AddOption(ListItemsKey, 1, "'AwsSh " + ListItemsKey + " <domain name>'\r\nList SimpleDB domain items");
+            __parser.AddOption(ListQueuesKey, 0, "'AwsSh " + ListQueuesKey + "'\r\nList SQS queues");
+            __parser.AddOption(PutObjectKey, 1, "'AwsSh " + PutObjectKey + " <object URL> [" + FileNameKey + " <file name>]'\r\nPuts S3 object\r\nIf " + FileNameKey + " not specified then file name must match object name");
+            __parser.AddOption(GetObjectKey, 1, "'AwsSh " + GetObjectKey + " <object URL> [" + FileNameKey + " <file name>]'\r\nGets S3 object\r\nIf " + FileNameKey + " not specified file name will match object name");
+            __parser.AddOption(SaveItemsKey, 1, "'AwsSh " + SaveItemsKey + " <domain name> " + FileNameKey + " <file name>'\r\nSaves SimpleDB domain items to XML file");
+            __parser.AddOption(HelpKey, 1, "'AwsSh " + HelpKey + " [option]'\r\nPrint help");
+            __parser.AddOption(FileNameKey, 1, "'AwsSh " + ListBucketsKey + " <file name>'\r\nSpecifies file name for corresponding option");
+        }
+
+        private static readonly CommandLineParser __parser;
 
         private static string ServiceId { get { return Environment.GetEnvironmentVariable("AWS_SERVICE_ID", EnvironmentVariableTarget.Process); } }
         private static string ServiceSecret { get { return Environment.GetEnvironmentVariable("AWS_SERVICE_SECRET", EnvironmentVariableTarget.Process); } }
 
         static void Main(string[] args)
         {
+            CommandLineOptions options = __parser.Parse(Environment.CommandLine);
+
             string containerName;
             string domainName;
             string objectPath;
             string fileName;
+            string helpOptionName;
 
-            if (__parser.Contains(ListBucketsKey))
+            try
             {
-                ListBuckets();
+                if (options.TryGet(HelpKey, out helpOptionName))
+                {
+                    WriteHelp(helpOptionName);
+                }
+                else if (options.Contains(ListBucketsKey))
+                {
+                    ListBuckets();
+                }
+                else if (options.Contains(ListDomainsKey))
+                {
+                    ListDomains();
+                }
+                else if (options.Contains(ListQueuesKey))
+                {
+                    ListQueues();
+                }
+                else if (options.TryGet(ListObjectsKey, out containerName))
+                {
+                    ListObjects(containerName);
+                }
+                else if (options.TryGet(ListItemsKey, out domainName))
+                {
+                    ListItems(domainName);
+                }
+                else if (options.TryGet(GetObjectKey, out objectPath))
+                {
+                    GetObject(objectPath, options.Get(FileNameKey));
+                }
+                else if (options.TryGet(PutObjectKey, out objectPath))
+                {
+                    PutObject(objectPath, options.Get(FileNameKey));
+                }
+                else if (
+                    options.TryGet(SaveItemsKey, out domainName) &&
+                    options.TryGet(FileNameKey, out fileName))
+                {
+                    SaveItems(domainName, fileName);
+                }
+                else
+                {
+                    WriteShortHelp();
+                }
             }
-            else if (__parser.Contains(ListDomainsKey))
+            catch (Exception e)
             {
-                ListDomains();
+                Console.WriteLine(e.Message);
             }
-            else if (__parser.Contains(ListQueuesKey))
+        }
+
+        private static void WriteHelp(string optionName)
+        {
+            Console.WriteLine("Set AWS credentials in environment variables: AWS_SERVICE_ID and AWS_SERVICE_SECRET");
+            Console.WriteLine();
+
+            if (string.IsNullOrEmpty(optionName))
             {
-                ListQueues();
+                __parser.WriteOptions();
+
+                Console.WriteLine();
+                Console.WriteLine("Type 'AwsSh --help <option>' for help");
             }
-            else if (__parser.TryGet(ListObjectsKey, out containerName))
+            else
             {
-                ListObjects(containerName);
+                __parser.WriteOptionHelp(optionName);
             }
-            else if (__parser.TryGet(ListItemsKey, out domainName))
-            {
-                ListItems(domainName);
-            }
-            else if (__parser.TryGet(GetObjectKey, out objectPath))
-            {
-                GetObject(objectPath);
-            }
-            else if (__parser.TryGet(PutObjectKey, out objectPath))
-            {
-                PutObject(objectPath);
-            }
-            else if (
-                __parser.TryGet(SaveItemsKey, out domainName) &&
-                __parser.TryGet(FileNameKey, out fileName))
-            {
-                SaveItems(domainName, fileName);
-            }
+        }
+
+        private static void WriteShortHelp()
+        {
+            Console.WriteLine("Type 'AwsSh --help' for help");
         }
 
         private static void ListQueues()
@@ -177,9 +343,13 @@ namespace Stratosphere.Command
 
         private static void ListBuckets()
         {
+            PrettyConsole console = new PrettyConsole();
+            console.AddColumn("Name", 64);
+            console.AddColumn("CreationDate", 64);
+
             foreach (IContainer container in S3Container.ListContainers(ServiceId, ServiceSecret))
             {
-                Console.WriteLine(container.Name);
+                console.WriteLine(container.Name, container.CreationDate);
             }
         }
 
@@ -216,7 +386,7 @@ namespace Stratosphere.Command
             Console.WriteLine("\'{0}\'=\'{1}\'", reader.AttributeName, reader.AttributeValue);
         }
 
-        private static void PutObject(string path)
+        private static void PutObject(string path, string fileName)
         {
             string containerName;
             string blockName;
@@ -226,9 +396,14 @@ namespace Stratosphere.Command
                 IContainer container = S3Container.GetContainer(ServiceId, ServiceSecret, containerName);
                 IBlock block = container.GetBlock(blockName);
 
-                using (FileStream input = new FileStream(blockName, FileMode.Open))
+                if (string.IsNullOrEmpty(fileName))
                 {
-                    Console.WriteLine(Path.GetFullPath(blockName));
+                    fileName = blockName;
+                }
+
+                using (FileStream input = new FileStream(fileName, FileMode.Open))
+                {
+                    Console.WriteLine(Path.GetFullPath(fileName));
 
                     block.Write((output) =>
                     {
@@ -257,7 +432,7 @@ namespace Stratosphere.Command
             }
         }
 
-        private static void GetObject(string path)
+        private static void GetObject(string path, string fileName)
         {
             string containerName;
             string blockName;
@@ -267,9 +442,14 @@ namespace Stratosphere.Command
                 IContainer container = S3Container.GetContainer(ServiceId, ServiceSecret, containerName);
                 IBlock block = container.GetBlock(blockName);
 
-                using (FileStream output = new FileStream(blockName, FileMode.Create))
+                if (string.IsNullOrEmpty(fileName))
                 {
-                    Console.WriteLine(Path.GetFullPath(blockName));
+                    fileName = blockName;
+                }
+
+                using (FileStream output = new FileStream(fileName, FileMode.Create))
+                {
+                    Console.WriteLine(Path.GetFullPath(fileName));
                     
                     block.Read((input) =>
                     {
