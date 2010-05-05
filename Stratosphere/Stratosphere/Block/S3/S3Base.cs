@@ -24,7 +24,7 @@ namespace Stratosphere.Block.S3
         {
             using (WebResponse response = request.GetResponse())
             {
-                if (response.ContentLength != 0)
+                if (response.ContentType == "application/xml")
                 {
                     using (XmlReader reader = XmlReader.Create(response.GetResponseStream()))
                     {

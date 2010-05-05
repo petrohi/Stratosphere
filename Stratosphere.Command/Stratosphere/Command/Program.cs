@@ -33,18 +33,25 @@ namespace Stratosphere.Command
 
         public void WriteHeader()
         {
-            int headerWidth = 0;
-
             foreach (Column column in _columns)
             {
                 Console.Write(column.Name);
                 Console.Write(new string(' ', column.Width - column.Name.Length));
-
-                headerWidth += column.Width;
             }
 
             Console.WriteLine();
-            Console.WriteLine(new string('-', headerWidth));
+
+            foreach (Column column in _columns)
+            {
+                if (column.Width > 1)
+                {
+                    Console.Write(new string('-', column.Width - 1));
+                }
+
+                Console.Write(' ');
+            }
+
+            Console.WriteLine();
         }
 
         public void WriteLine(params object[] objs)
@@ -56,7 +63,11 @@ namespace Stratosphere.Command
                     string s = objs[i].ToString();
 
                     Console.Write(s);
-                    Console.Write(new string(' ', _columns[i].Width - s.Length));
+
+                    if (s.Length < _columns[i].Width)
+                    {
+                        Console.Write(new string(' ', _columns[i].Width - s.Length));
+                    }
                 }
             }
 
@@ -197,8 +208,10 @@ namespace Stratosphere.Command
         }
     }
 
-    class Program
+    public class Program
     {
+        private readonly CommandLineOptions _options;
+
         private const string ListBucketsKey = "--list-buckets";
         private const string ListObjectsKey = "--list-objects";
         private const string ListDomainsKey = "--list-domains";
@@ -209,6 +222,8 @@ namespace Stratosphere.Command
         private const string SaveItemsKey = "--save-items";
         private const string HelpKey = "--help";
         private const string FileNameKey = "--file-name";
+        private const string ServiceIdKey = "--service-id";
+        private const string ServiceSecretKey = "--service-secret";
 
         static Program()
         {
@@ -224,17 +239,49 @@ namespace Stratosphere.Command
             __parser.AddOption(SaveItemsKey, 1, "'AwsSh " + SaveItemsKey + " <domain name> " + FileNameKey + " <file name>'\r\nSaves SimpleDB domain items to XML file");
             __parser.AddOption(HelpKey, 1, "'AwsSh " + HelpKey + " [option]'\r\nPrint help");
             __parser.AddOption(FileNameKey, 1, "'AwsSh " + ListBucketsKey + " <file name>'\r\nSpecifies file name for corresponding option");
+            __parser.AddOption(ServiceIdKey, 1, "'AwsSh " + ServiceIdKey + " <service id>'\r\nSpecifies AWS service ID\r\nCan be also specified with AWS_SERVICE_ID environment variable");
+            __parser.AddOption(ServiceSecretKey, 1, "'AwsSh " + ServiceSecretKey + " <service id>'\r\nSpecifies AWS service secret\r\nCan be also specified with AWS_SERVICE_SECRET environment variable");
         }
 
         private static readonly CommandLineParser __parser;
 
-        private static string ServiceId { get { return Environment.GetEnvironmentVariable("AWS_SERVICE_ID", EnvironmentVariableTarget.Process); } }
-        private static string ServiceSecret { get { return Environment.GetEnvironmentVariable("AWS_SERVICE_SECRET", EnvironmentVariableTarget.Process); } }
+        private string ServiceId
+        {
+            get
+            {
+                string sericeId;
+
+                if (_options.TryGet(ServiceIdKey, out sericeId))
+                {
+                    return sericeId;
+                }
+
+                return Environment.GetEnvironmentVariable("AWS_SERVICE_ID", EnvironmentVariableTarget.Process);
+            }
+        }
+
+        private string ServiceSecret
+        {
+            get
+            {
+                string sericeSecret;
+
+                if (_options.TryGet(ServiceSecretKey, out sericeSecret))
+                {
+                    return sericeSecret;
+                }
+
+                return Environment.GetEnvironmentVariable("AWS_SERVICE_SECRET", EnvironmentVariableTarget.Process);
+            }
+        }
 
         static void Main(string[] args)
         {
-            CommandLineOptions options = __parser.Parse(Environment.CommandLine);
+            new Program(__parser.Parse(Environment.CommandLine)).Run();
+        }
 
+        private void Run()
+        {
             string containerName;
             string domainName;
             string objectPath;
@@ -243,41 +290,41 @@ namespace Stratosphere.Command
 
             try
             {
-                if (options.TryGet(HelpKey, out helpOptionName))
+                if (_options.TryGet(HelpKey, out helpOptionName))
                 {
                     WriteHelp(helpOptionName);
                 }
-                else if (options.Contains(ListBucketsKey))
+                else if (_options.Contains(ListBucketsKey))
                 {
                     ListBuckets();
                 }
-                else if (options.Contains(ListDomainsKey))
+                else if (_options.Contains(ListDomainsKey))
                 {
                     ListDomains();
                 }
-                else if (options.Contains(ListQueuesKey))
+                else if (_options.Contains(ListQueuesKey))
                 {
                     ListQueues();
                 }
-                else if (options.TryGet(ListObjectsKey, out containerName))
+                else if (_options.TryGet(ListObjectsKey, out containerName))
                 {
                     ListObjects(containerName);
                 }
-                else if (options.TryGet(ListItemsKey, out domainName))
+                else if (_options.TryGet(ListItemsKey, out domainName))
                 {
                     ListItems(domainName);
                 }
-                else if (options.TryGet(GetObjectKey, out objectPath))
+                else if (_options.TryGet(GetObjectKey, out objectPath))
                 {
-                    GetObject(objectPath, options.Get(FileNameKey));
+                    GetObject(objectPath, _options.Get(FileNameKey));
                 }
-                else if (options.TryGet(PutObjectKey, out objectPath))
+                else if (_options.TryGet(PutObjectKey, out objectPath))
                 {
-                    PutObject(objectPath, options.Get(FileNameKey));
+                    PutObject(objectPath, _options.Get(FileNameKey));
                 }
                 else if (
-                    options.TryGet(SaveItemsKey, out domainName) &&
-                    options.TryGet(FileNameKey, out fileName))
+                    _options.TryGet(SaveItemsKey, out domainName) &&
+                    _options.TryGet(FileNameKey, out fileName))
                 {
                     SaveItems(domainName, fileName);
                 }
@@ -292,9 +339,14 @@ namespace Stratosphere.Command
             }
         }
 
-        private static void WriteHelp(string optionName)
+        private Program(CommandLineOptions options)
         {
-            Console.WriteLine("Set AWS credentials in environment variables: AWS_SERVICE_ID and AWS_SERVICE_SECRET");
+            _options = options;
+        }
+
+        private void WriteHelp(string optionName)
+        {
+            Console.WriteLine("Amazon Web Services Shell");
             Console.WriteLine();
 
             if (string.IsNullOrEmpty(optionName))
@@ -310,42 +362,71 @@ namespace Stratosphere.Command
             }
         }
 
-        private static void WriteShortHelp()
+        private void WriteShortHelp()
         {
             Console.WriteLine("Type 'AwsSh --help' for help");
         }
 
-        private static void ListQueues()
+        private void ListQueues()
         {
+            PrettyConsole console = new PrettyConsole();
+            console.AddColumn("Name", 64);
+            console.AddColumn("MessageCount", 16);
+            console.AddColumn("MessageNotVisibleCount", 22);
+            console.WriteHeader();
+
             foreach (SqsQueue queue in SqsQueue.ListQueues(ServiceId, ServiceSecret))
             {
-                Console.WriteLine(queue.Name);
+                long messageCount;
+                long messageNotVisibleCount;
+
+                queue.GetInfo(out messageCount, out messageNotVisibleCount);
+
+                console.WriteLine(queue.Name, messageCount, messageNotVisibleCount);
             }
         }
 
-        private static void ListDomains()
+        private void ListDomains()
         {
+            PrettyConsole console = new PrettyConsole();
+            console.AddColumn("Name", 64);
+            console.AddColumn("ItemCount", 16);
+            console.AddColumn("SizeBytes", 16);
+            console.WriteHeader();
+
             foreach (SdbTable table in SdbTable.ListTables(ServiceId, ServiceSecret))
             {
-                Console.WriteLine(table.DomainName);
+                long itemCount;
+                long sizeBytes;
+
+                table.GetInfo(out itemCount, out sizeBytes);
+
+                console.WriteLine(table.Name, itemCount, sizeBytes);
             }
         }
 
-        private static void ListObjects(string containerName)
+        private void ListObjects(string containerName)
         {
+            PrettyConsole console = new PrettyConsole();
+            console.AddColumn("Name", 64);
+            console.AddColumn("LastModifiedDate", 24);
+            console.AddColumn("SizeBytes", 16);
+            console.WriteHeader();
+
             IContainer container = S3Container.GetContainer(ServiceId, ServiceSecret, containerName);
 
             foreach (IBlock block in container.ListBlocks())
             {
-                Console.WriteLine(block.Name);
+                console.WriteLine(block.Name, block.LastModifiedDate, block.SizeBytes);
             }
         }
 
-        private static void ListBuckets()
+        private void ListBuckets()
         {
             PrettyConsole console = new PrettyConsole();
             console.AddColumn("Name", 64);
-            console.AddColumn("CreationDate", 64);
+            console.AddColumn("CreationDate", 24);
+            console.WriteHeader();
 
             foreach (IContainer container in S3Container.ListContainers(ServiceId, ServiceSecret))
             {
@@ -353,7 +434,7 @@ namespace Stratosphere.Command
             }
         }
 
-        private static void ListItems(string domainName)
+        private void ListItems(string domainName)
         {
             SdbTable table = SdbTable.Create(ServiceId, ServiceSecret, domainName);
 
@@ -386,7 +467,7 @@ namespace Stratosphere.Command
             Console.WriteLine("\'{0}\'=\'{1}\'", reader.AttributeName, reader.AttributeValue);
         }
 
-        private static void PutObject(string path, string fileName)
+        private void PutObject(string path, string fileName)
         {
             string containerName;
             string blockName;
@@ -401,38 +482,43 @@ namespace Stratosphere.Command
                     fileName = blockName;
                 }
 
-                using (FileStream input = new FileStream(fileName, FileMode.Open))
+                long currentCountBytes = 0;
+                long fileSizeBytes = new FileInfo(fileName).Length;
+
+                if (fileSizeBytes != 0)
                 {
-                    Console.WriteLine(Path.GetFullPath(fileName));
-
-                    block.Write((output) =>
+                    using (FileStream input = new FileStream(fileName, FileMode.Open))
                     {
-                        byte[] buffer = new byte[BufferSize];
-                        int count = 0;
-
-                        using (output)
+                        block.Write((output) =>
                         {
-                            do
+                            byte[] buffer = new byte[BufferSize];
+                            int countBytes = 0;
+
+                            using (output)
                             {
-                                count = input.Read(buffer, 0, buffer.Length);
-
-                                if (count != 0)
+                                do
                                 {
-                                    output.Write(buffer, 0, count);
+                                    countBytes = input.Read(buffer, 0, buffer.Length);
 
-                                    Console.Write(".");
+                                    if (countBytes != 0)
+                                    {
+                                        output.Write(buffer, 0, countBytes);
+
+                                        currentCountBytes += countBytes;
+                                        WriteProgress("Uploaded {0:F2} %", ((float)countBytes / (float)fileSizeBytes) * 100.0);
+                                    }
                                 }
+                                while (countBytes != 0);
                             }
-                            while (count != 0);
-                        }
-                    });
+                        });
+                    }
                 }
 
-                Console.WriteLine();
+                Console.WriteLine("{0} uploaded {1} bytes", Path.GetFullPath(fileName), currentCountBytes);
             }
         }
 
-        private static void GetObject(string path, string fileName)
+        private void GetObject(string path, string fileName)
         {
             string containerName;
             string blockName;
@@ -447,39 +533,46 @@ namespace Stratosphere.Command
                     fileName = blockName;
                 }
 
+                long currentCountBytes = 0;
+
                 using (FileStream output = new FileStream(fileName, FileMode.Create))
                 {
-                    Console.WriteLine(Path.GetFullPath(fileName));
-                    
                     block.Read((input) =>
                     {
                         byte[] buffer = new byte[BufferSize];
-                        int count = 0;
+                        int countBytes = 0;
 
                         using (input)
                         {
                             do
                             {
-                                count = input.Read(buffer, 0, buffer.Length);
+                                countBytes = input.Read(buffer, 0, buffer.Length);
 
-                                if (count != 0)
+                                if (countBytes != 0)
                                 {
-                                    output.Write(buffer, 0, count);
+                                    output.Write(buffer, 0, countBytes);
 
-                                    Console.Write(".");
+                                    currentCountBytes += countBytes;
+
+                                    WriteProgress("Downloaded {0} bytes", currentCountBytes);
                                 }
                             }
-                            while (count != 0);
+                            while (countBytes != 0);
                         }
                     });
                 }
 
-                Console.WriteLine();
+                if (currentCountBytes != 0)
+                {
+                    Console.WriteLine("{0} downloaded {1} bytes", Path.GetFullPath(fileName), currentCountBytes);
+                }
             }
         }
 
-        private static void SaveItems(string domainName, string fileName)
+        private void SaveItems(string domainName, string fileName)
         {
+            long itemCount;
+
             using (FileStream stream = new FileStream(fileName, FileMode.Create))
             {
                 using (XmlWriter writer = XmlWriter.Create(stream))
@@ -487,11 +580,10 @@ namespace Stratosphere.Command
                     writer.WriteStartDocument();
                     writer.WriteStartElement("Domain");
 
-                    long elementCount;
                     long sizeBytes;
 
                     SdbTable table = SdbTable.Create(ServiceId, ServiceSecret, domainName);
-                    table.GetInfo(out elementCount, out sizeBytes);
+                    table.GetInfo(out itemCount, out sizeBytes);
                     int count = 0;
 
                     using (IReader reader = table.Select(new string[] { }, null))
@@ -515,7 +607,7 @@ namespace Stratosphere.Command
                                     itemBegan = true;
                                 }
 
-                                WriteProgress("Saved {0:F2} %", ((float)count / (float)elementCount) * 100.0);
+                                WriteProgress("Saved {0:F1} %", ((float)count / (float)itemCount) * 100.0);
                                 count++;
                             }
                             else
@@ -533,16 +625,16 @@ namespace Stratosphere.Command
                         writer.WriteEndDocument();
                     }
                 }
-
-                Console.WriteLine("{0} written {1} bytes", Path.GetFullPath(fileName), new FileInfo(fileName).Length);
             }
+
+            Console.WriteLine("{0} saved {1} items {2} bytes", Path.GetFullPath(fileName), itemCount, new FileInfo(fileName).Length);
         }
 
         private static void BeginSaveItem(XmlWriter writer, IReader reader)
         {
             writer.WriteStartElement("Element");
             writer.WriteAttributeString("Id", reader.ItemName);
-            
+
             SaveAttribute(writer, reader);
         }
 
@@ -551,13 +643,43 @@ namespace Stratosphere.Command
             writer.WriteElementString(XmlConvert.EncodeLocalName(reader.AttributeName), reader.AttributeValue);
         }
 
+        private static string ParseContainerName(string containerName)
+        {
+            string[] segments = containerName.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            StringBuilder builder = new StringBuilder();
+
+            for (int i = 0; i < segments.Length; i++)
+            {
+                if (builder.Length != 0)
+                {
+                    builder.Append('/');
+                }
+
+                builder.Append(segments[i]);
+            }
+
+            return builder.ToString();
+        }
+
         private static bool TryParsePath(string path, out string containerName, out string blockName)
         {
-            string[] segments = path.Split(new char[] { '/' });
+            string[] segments = path.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 
             if (segments.Length >= 2)
             {
-                containerName = segments[0];
+                StringBuilder builder = new StringBuilder();
+
+                for (int i = 0; i < (segments.Length - 1); i++)
+                {
+                    if (builder.Length != 0)
+                    {
+                        builder.Append('/');
+                    }
+
+                    builder.Append(segments[i]);
+                }
+
+                containerName = builder.ToString();
                 blockName = segments[segments.Length - 1];
 
                 return true;

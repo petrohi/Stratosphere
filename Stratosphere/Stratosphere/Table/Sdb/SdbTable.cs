@@ -75,11 +75,11 @@ namespace Stratosphere.Table.Sdb
                 base("DomainMetadata", domainName) { }
         }
 
-        public void GetInfo(out long elementCount, out long sizeBytes)
+        public void GetInfo(out long itemCount, out long sizeBytes)
         {
             XElement responseElement = _service.Execute(new DomainMetadataBuilder(_domainName));
 
-            elementCount = long.Parse(responseElement.Descendants(Sdb + "ItemCount").First().Value);
+            itemCount = long.Parse(responseElement.Descendants(Sdb + "ItemCount").First().Value);
             sizeBytes =
                 long.Parse(responseElement.Descendants(Sdb + "ItemNamesSizeBytes").First().Value) +
                 long.Parse(responseElement.Descendants(Sdb + "AttributeNamesSizeBytes").First().Value) +
@@ -540,7 +540,7 @@ namespace Stratosphere.Table.Sdb
             while (nextToken != null);
         }
 
-        public string DomainName { get { return _domainName; } }
+        public string Name { get { return _domainName; } }
 
         private SdbTable(SdbService service, string domainName, int? selectLimit)
         {
