@@ -81,8 +81,19 @@ namespace Stratosphere.Queue.Sqs
         public static SqsQueue Create(string serviceId, string serviceSecret, string queueName)
         {
             SqsService service = new SqsService(serviceId, serviceSecret);
-
             return Create(service, queueName);
+        }
+
+        public static SqsQueue Create(string serviceId, string serviceSecret, string queueName, bool ensureQueue)
+        {
+            SqsQueue queue;
+
+            if (TryCreate(serviceId, serviceSecret, queueName, ensureQueue, out queue))
+            {
+                return queue;
+            }
+
+            return null;
         }
 
         public static bool TryCreate(string serviceId, string serviceSecret, string queueName, bool ensureQueue, out SqsQueue queue)

@@ -18,8 +18,8 @@ namespace Stratosphere.Table.Sdb
             if (serviceId != null && serviceSecret != null && domainName != null)
             {
                 return Create(serviceId.Value, serviceSecret.Value, domainName.Value,
-                    ensureDomain != null ? XmlConvert.ToBoolean(ensureDomain.Value) : false,
-                    selectLimit != null ? (int?)XmlConvert.ToInt32(selectLimit.Value) : null);
+                    selectLimit != null ? (int?)XmlConvert.ToInt32(selectLimit.Value) : null,
+                    ensureDomain != null ? XmlConvert.ToBoolean(ensureDomain.Value) : false);
             }
 
             return null;

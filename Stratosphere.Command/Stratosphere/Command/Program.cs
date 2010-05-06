@@ -413,7 +413,7 @@ namespace Stratosphere.Command
             console.AddColumn("SizeBytes", 16);
             console.WriteHeader();
 
-            IContainer container = S3Container.GetContainer(ServiceId, ServiceSecret, containerName);
+            IContainer container = S3Container.Get(ServiceId, ServiceSecret, containerName);
 
             foreach (IBlock block in container.ListBlocks())
             {
@@ -474,7 +474,7 @@ namespace Stratosphere.Command
 
             if (TryParsePath(path, out containerName, out blockName))
             {
-                IContainer container = S3Container.GetContainer(ServiceId, ServiceSecret, containerName);
+                IContainer container = S3Container.Get(ServiceId, ServiceSecret, containerName);
                 IBlock block = container.GetBlock(blockName);
 
                 if (string.IsNullOrEmpty(fileName))
@@ -525,7 +525,7 @@ namespace Stratosphere.Command
 
             if (TryParsePath(path, out containerName, out blockName))
             {
-                IContainer container = S3Container.GetContainer(ServiceId, ServiceSecret, containerName);
+                IContainer container = S3Container.Get(ServiceId, ServiceSecret, containerName);
                 IBlock block = container.GetBlock(blockName);
 
                 if (string.IsNullOrEmpty(fileName))

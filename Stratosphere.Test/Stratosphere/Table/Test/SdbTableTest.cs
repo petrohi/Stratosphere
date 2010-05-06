@@ -23,7 +23,7 @@ namespace Stratosphere.Table.Test
         {
             return new DelayedTable(SdbTable.Create(
                 AmazonTest.ServiceId, AmazonTest.ServiceSecret,
-                GetNextDomainName(), true, null),DelayMilliseconds);
+                GetNextDomainName(), null),DelayMilliseconds);
         }
     }
 
@@ -35,7 +35,7 @@ namespace Stratosphere.Table.Test
         {
             return new DelayedTable(SdbTable.Create(
                 AmazonTest.ServiceId, AmazonTest.ServiceSecret,
-                GetNextDomainName(), true, SelectLimit), DelayMilliseconds);
+                GetNextDomainName(), SelectLimit), DelayMilliseconds);
         }
     }
 }

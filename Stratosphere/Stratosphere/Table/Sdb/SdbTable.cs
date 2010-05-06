@@ -21,6 +21,12 @@ namespace Stratosphere.Table.Sdb
                 base("ListDomains") { }
         }
 
+        private class CreateDomainBuilder : DomainActionBuilder
+        {
+            public CreateDomainBuilder(string domainName) :
+                base("CreateDomain", domainName) { }
+        }
+
         public static IEnumerable<SdbTable> ListTables(string serviceId, string serviceSecret)
         {
             return ListTables(serviceId, serviceSecret, null);
@@ -37,32 +43,58 @@ namespace Stratosphere.Table.Sdb
             }
         }
 
+        public static SdbTable Get(string serviceId, string serviceSecret, string domainName)
+        {
+            return Get(serviceId, serviceSecret, domainName, null);
+        }
+
+        public static SdbTable Get(string serviceId, string serviceSecret, string domainName, int? selectLimit)
+        {
+            return new SdbTable(new SdbService(serviceId, serviceSecret), domainName, selectLimit);
+        }
+
         public static SdbTable Create(string serviceId, string serviceSecret, string domainName)
         {
-            return Create(serviceId, serviceSecret, domainName, false, null);
+            return Create(serviceId, serviceSecret, domainName, null);
         }
 
-        private class CreateDomainBuilder : DomainActionBuilder
-        {
-            public CreateDomainBuilder(string domainName) :
-                base("CreateDomain", domainName) { }
-        }
-
-        public static SdbTable Create(string serviceId, string serviceSecret, string domainName, bool ensureDomain, int? selectLimit)
+        public static SdbTable Create(string serviceId, string serviceSecret, string domainName, int? selectLimit)
         {
             SdbService service = new SdbService(serviceId, serviceSecret);
-            
-            if (ensureDomain)
-            {
-                XElement responseElement = service.Execute(new ListDomainsBuilder());
+            return Create(service, domainName, selectLimit); ;
+        }
 
-                if (!responseElement.Descendants(Sdb + "DomainName").Select(n => n.Value).Contains(domainName))
-                {
-                    service.Execute(new CreateDomainBuilder(domainName));
-                }
+        public static SdbTable Create(string serviceId, string serviceSecret, string domainName, int? selectLimit, bool ensureDomain)
+        {
+            SdbTable table;
+
+            if (TryCreate(serviceId, serviceSecret, domainName, selectLimit, ensureDomain, out table))
+            {
+                return table;
             }
 
-            return new SdbTable(service, domainName, selectLimit);
+            return null;
+        }
+
+        public static bool TryCreate(string serviceId, string serviceSecret, string domainName, int? selectLimit, bool ensureDomain, out SdbTable table)
+        {
+            SdbService service = new SdbService(serviceId, serviceSecret);
+            XElement responseElement = service.Execute(new ListDomainsBuilder());
+
+            if (responseElement.Descendants(Sdb + "DomainName").Select(n => n.Value).Contains(domainName))
+            {
+                table = new SdbTable(service, domainName, selectLimit);
+                return true;
+            }
+
+            if (ensureDomain)
+            {
+                table = Create(service, domainName, selectLimit);
+                return true;
+            }
+
+            table = null;
+            return false;
         }
 
         public static void ResetBoxUsage() { SdbService.ResetBoxUsage(); }
@@ -353,9 +385,14 @@ namespace Stratosphere.Table.Sdb
             }
         }
 
+        public IReader Select(string selectExpression)
+        {
+            return new Reader(SelectElements(selectExpression));
+        }
+
         public IReader Select(IEnumerable<string> attributeNames, Condition condition)
         {
-            return new Reader(SelectPairs(attributeNames, condition));
+            return new Reader(SelectElements(attributeNames, condition));
         }
 
         public long SelectCount(Condition condition)
@@ -374,152 +411,162 @@ namespace Stratosphere.Table.Sdb
 
         private class SelectBuilder : AmazonActionBuilder
         {
-            public SelectBuilder(string domainName, IEnumerable<string> attributeNames, Condition condition, string nextToken, int? selectLimit)
+            public SelectBuilder(string selectExpression, string nextToken)
                 : base("Select")
             {
-                StringBuilder builder = new StringBuilder("select ");
-                builder.Append(BuildSelectList(attributeNames.Distinct()));
-                builder.Append(" from ");
-                builder.Append(domainName);
-                builder.Append(BuildWhereClause(condition));
-
-                if (selectLimit.HasValue)
-                {
-                    builder.Append(" limit ");
-                    builder.Append(selectLimit.Value);
-                }
-
-                Add("SelectExpression", builder.ToString());
+                Add("SelectExpression", selectExpression);
 
                 if (!string.IsNullOrEmpty(nextToken))
                 {
                     Add("NextToken", nextToken);
                 }
             }
+        }
 
-            private static string ContinueBuildWhereClause(Condition condition)
+        private static string BuildSelectExpression(string domainName, IEnumerable<string> attributeNames, Condition condition, int? selectLimit)
+        {
+            StringBuilder builder = new StringBuilder("select ");
+            builder.Append(BuildSelectList(attributeNames.Distinct()));
+            builder.Append(" from ");
+            builder.Append(domainName);
+            builder.Append(BuildWhereClause(condition));
+
+            if (selectLimit.HasValue)
             {
-                ItemNameCondition itemNameCondition;
-                AttributeValueCondition attributeValueCondition;
-                AttributeIsNullCondition attributeIsNullCondition;
-                AttributeIsNotNullCondition attributeIsNotNullCondition;
-                GroupCondition groupCondition;
+                builder.Append(" limit ");
+                builder.Append(selectLimit.Value);
+            }
 
-                if ((itemNameCondition = condition as ItemNameCondition) != null)
-                {
-                    return string.Format("itemName()='{0}'", (string)itemNameCondition.ItemName);
-                }
-                else if ((attributeValueCondition = condition as AttributeValueCondition) != null)
-                {
-                    return string.Format("{0}='{1}'", attributeValueCondition.Pair.Key, attributeValueCondition.Pair.Value);
-                }
-                else if ((attributeIsNullCondition = condition as AttributeIsNullCondition) != null)
-                {
-                    return string.Format("{0} is null", attributeIsNullCondition.Name);
-                }
-                else if ((attributeIsNotNullCondition = condition as AttributeIsNotNullCondition) != null)
-                {
-                    return string.Format("{0} is not null", attributeIsNotNullCondition.Name);
-                }
-                else if ((groupCondition = condition as GroupCondition) != null)
-                {
-                    if (groupCondition.IsEmpty)
-                    {
-                        return string.Empty;
-                    }
-                    else
-                    {
-                        StringBuilder builder = new StringBuilder();
+            return builder.ToString();
+        }
 
-                        foreach (Condition inner in groupCondition.Group)
+        private static string ContinueBuildWhereClause(Condition condition)
+        {
+            ItemNameCondition itemNameCondition;
+            AttributeValueCondition attributeValueCondition;
+            AttributeIsNullCondition attributeIsNullCondition;
+            AttributeIsNotNullCondition attributeIsNotNullCondition;
+            GroupCondition groupCondition;
+
+            if ((itemNameCondition = condition as ItemNameCondition) != null)
+            {
+                return string.Format("itemName()='{0}'", (string)itemNameCondition.ItemName);
+            }
+            else if ((attributeValueCondition = condition as AttributeValueCondition) != null)
+            {
+                return string.Format("{0}='{1}'", attributeValueCondition.Pair.Key, attributeValueCondition.Pair.Value);
+            }
+            else if ((attributeIsNullCondition = condition as AttributeIsNullCondition) != null)
+            {
+                return string.Format("{0} is null", attributeIsNullCondition.Name);
+            }
+            else if ((attributeIsNotNullCondition = condition as AttributeIsNotNullCondition) != null)
+            {
+                return string.Format("{0} is not null", attributeIsNotNullCondition.Name);
+            }
+            else if ((groupCondition = condition as GroupCondition) != null)
+            {
+                if (groupCondition.IsEmpty)
+                {
+                    return string.Empty;
+                }
+                else
+                {
+                    StringBuilder builder = new StringBuilder();
+
+                    foreach (Condition inner in groupCondition.Group)
+                    {
+                        string innerExpression = ContinueBuildWhereClause(inner);
+
+                        if (!string.IsNullOrEmpty(innerExpression))
                         {
-                            string innerExpression = ContinueBuildWhereClause(inner);
-
-                            if (!string.IsNullOrEmpty(innerExpression))
+                            if (builder.Length != 0)
                             {
-                                if (builder.Length != 0)
+                                if (groupCondition.Operator == GroupConditionOperator.And)
                                 {
-                                    if (groupCondition.Operator == GroupConditionOperator.And)
-                                    {
-                                        builder.Append(" and ");
-                                    }
-                                    else if (groupCondition.Operator == GroupConditionOperator.Or)
-                                    {
-                                        builder.Append(" or ");
-                                    }
-                                    else
-                                    {
-                                        throw new ArgumentException("Group operator is not supported");
-                                    }
+                                    builder.Append(" and ");
+                                }
+                                else if (groupCondition.Operator == GroupConditionOperator.Or)
+                                {
+                                    builder.Append(" or ");
                                 }
                                 else
                                 {
-                                    builder.Append("(");
+                                    throw new ArgumentException("Group operator is not supported");
                                 }
-
-                                builder.Append(innerExpression);
                             }
+                            else
+                            {
+                                builder.Append("(");
+                            }
+
+                            builder.Append(innerExpression);
                         }
-
-                        if (builder.Length != 0)
-                        {
-                            builder.Append(")");
-                            return builder.ToString();
-                        }
-
-                        return string.Empty;
                     }
-                }
 
-                throw new ArgumentException("Condition is not supported");
-            }
-
-            private static string BuildWhereClause(Condition condition)
-            {
-                if (condition != null)
-                {
-                    string expression = ContinueBuildWhereClause(condition);
-
-                    if (!string.IsNullOrEmpty(expression))
-                    {
-                        return string.Format(" where {0}", expression);
-                    }
-                }
-
-                return string.Empty;
-            }
-
-            private static string BuildSelectList(IEnumerable<string> attributeKeys)
-            {
-                StringBuilder builder = new StringBuilder();
-
-                foreach (string key in attributeKeys)
-                {
                     if (builder.Length != 0)
                     {
-                        builder.Append(',');
+                        builder.Append(")");
+                        return builder.ToString();
                     }
 
-                    builder.Append(key);
+                    return string.Empty;
                 }
-
-                if (builder.Length == 0)
-                {
-                    builder.Append('*');
-                }
-
-                return builder.ToString();
             }
+
+            throw new ArgumentException("Condition is not supported");
         }
 
-        private IEnumerable<XElement> SelectPairs(IEnumerable<string> attributeNames, Condition condition)
+        private static string BuildWhereClause(Condition condition)
+        {
+            if (condition != null)
+            {
+                string expression = ContinueBuildWhereClause(condition);
+
+                if (!string.IsNullOrEmpty(expression))
+                {
+                    return string.Format(" where {0}", expression);
+                }
+            }
+
+            return string.Empty;
+        }
+
+        private static string BuildSelectList(IEnumerable<string> attributeKeys)
+        {
+            StringBuilder builder = new StringBuilder();
+
+            foreach (string key in attributeKeys)
+            {
+                if (builder.Length != 0)
+                {
+                    builder.Append(',');
+                }
+
+                builder.Append(key);
+            }
+
+            if (builder.Length == 0)
+            {
+                builder.Append('*');
+            }
+
+            return builder.ToString();
+        }
+
+        private IEnumerable<XElement> SelectElements(IEnumerable<string> attributeNames, Condition condition)
+        {
+            return SelectElements(BuildSelectExpression(_domainName, attributeNames, condition, _selectLimit));
+        }
+
+        private IEnumerable<XElement> SelectElements(string selectExpression)
         {
             string nextToken = null;
 
             do
             {
                 XElement responseElement = _service.Execute(
-                    new SelectBuilder(_domainName, attributeNames, condition, nextToken, _selectLimit));
+                    new SelectBuilder(selectExpression, nextToken));
 
                 foreach (XElement itemElement in responseElement.Descendants(Sdb + "Item"))
                 {
@@ -541,6 +588,12 @@ namespace Stratosphere.Table.Sdb
         }
 
         public string Name { get { return _domainName; } }
+
+        private static SdbTable Create(SdbService service, string domainName, int? selectLimit)
+        {
+            service.Execute(new CreateDomainBuilder(domainName));
+            return new SdbTable(service, domainName, selectLimit);
+        }
 
         private SdbTable(SdbService service, string domainName, int? selectLimit)
         {

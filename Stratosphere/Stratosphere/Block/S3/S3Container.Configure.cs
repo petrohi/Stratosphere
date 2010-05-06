@@ -15,7 +15,7 @@ namespace Stratosphere.Block.S3
 
             if (serviceId != null && serviceSecret != null && containerName != null)
             {
-                return GetContainer(serviceId.Value, serviceSecret.Value, containerName.Value);
+                return Get(serviceId.Value, serviceSecret.Value, containerName.Value);
             }
 
             return null;

@@ -21,7 +21,7 @@ namespace Stratosphere.Block.S3
                     XmlConvert.ToDateTime(b.Element(S3 + "CreationDate").Value, XmlDateTimeSerializationMode.Utc)));
         }
 
-        public static S3Container GetContainer(string serviceId, string serviceSecret, string name)
+        public static S3Container Get(string serviceId, string serviceSecret, string name)
         {
             return new S3Container(new S3Service(serviceId, serviceSecret), name, DateTime.MinValue);
         }
