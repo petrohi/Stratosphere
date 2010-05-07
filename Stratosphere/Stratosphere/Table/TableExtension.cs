@@ -17,7 +17,8 @@ namespace Stratosphere.Table
 
                 while ((state = reader.Read()) != ReadingState.End)
                 {
-                    if (state == ReadingState.BeginItem)
+                    if (state == ReadingState.EmptyItem ||
+                        state == ReadingState.Item)
                     {
                         itemNames.Add(reader.ItemName);
                     }
@@ -85,15 +86,28 @@ namespace Stratosphere.Table
 
                 while ((state = reader.Read()) != ReadingState.End)
                 {
-                    if (state == ReadingState.BeginItem)
+                    if (state == ReadingState.EmptyItem ||
+                        state == ReadingState.Item)
                     {
                         if (itemName != null)
                         {
                             yield return new KeyValuePair<string, T>(itemName, itemData);
+
+                            itemName = null;
+                            itemData = default(T);
                         }
 
-                        itemData = new T();
-                        itemName = reader.ItemName;
+                        if (state == ReadingState.EmptyItem)
+                        {
+                            yield return new KeyValuePair<string, T>(reader.ItemName, new T());
+
+                            continue;
+                        }
+                        else
+                        {
+                            itemName = reader.ItemName;
+                            itemData = new T();
+                        }
                     }
 
                     itemData[reader.AttributeName] = reader.AttributeValue;

@@ -4,9 +4,10 @@ namespace Stratosphere.Table
 {
     public enum ReadingState
     {
-        Value = 0,
-        BeginItem,
-        BeginAttribute,
+        EmptyItem = 0,
+        Item,
+        Attribute,
+        Value,
 
         End = -1
     }

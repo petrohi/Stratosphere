@@ -43,6 +43,11 @@ namespace Stratosphere.Table.Sdb
             }
         }
 
+        public static IReader Select(string serviceId, string serviceSecret, string selectExpression)
+        {
+            return new Reader(SelectElements(new SdbService(serviceId, serviceSecret), selectExpression));
+        }
+
         public static SdbTable Get(string serviceId, string serviceSecret, string domainName)
         {
             return Get(serviceId, serviceSecret, domainName, null);
@@ -255,7 +260,7 @@ namespace Stratosphere.Table.Sdb
             private readonly IEnumerable<XElement> _items;
 
             private IEnumerator<XElement> _itemEnumerator;
-            private IEnumerator<XElement> _attributeEnumerator;
+            private IEnumerator<IGrouping<string, XElement>> _attributeEnumerator;
             private IEnumerator<XElement> _valueEnumerator;
 
             public Reader(IEnumerable<XElement> items)
@@ -265,7 +270,7 @@ namespace Stratosphere.Table.Sdb
 
             private bool MoveNextValue()
             {
-                if (_valueEnumerator != null)
+                if (_attributeEnumerator != null)
                 {
                     return _valueEnumerator.MoveNext();
                 }
@@ -279,7 +284,7 @@ namespace Stratosphere.Table.Sdb
                 {
                     while (_attributeEnumerator.MoveNext())
                     {
-                        _valueEnumerator = _attributeEnumerator.Current.Elements(Sdb + "Value").GetEnumerator();
+                        _valueEnumerator = _attributeEnumerator.Current.GetEnumerator();
 
                         if (MoveNextValue())
                         {
@@ -291,18 +296,24 @@ namespace Stratosphere.Table.Sdb
                 return false;
             }
 
-            private bool MoveNextItem()
+            private bool MoveNextItem(out bool isEmpty)
             {
+                isEmpty = false;
+
                 if (_itemEnumerator != null)
                 {
                     while (_itemEnumerator.MoveNext())
                     {
-                        _attributeEnumerator = _itemEnumerator.Current.Elements(Sdb + "Attribute").GetEnumerator();
+                        _attributeEnumerator = _itemEnumerator.Current.Elements(Sdb + "Attribute").GroupBy(a =>
+                            a.Element(Sdb + "Name").Value).GetEnumerator();
 
-                        if (MoveNextAttribute())
+                        if (!MoveNextAttribute())
                         {
-                            return true;
+                            _attributeEnumerator = null;
+                            isEmpty = true;
                         }
+
+                        return true;
                     }
                 }
 
@@ -316,17 +327,24 @@ namespace Stratosphere.Table.Sdb
                     _itemEnumerator = _items.GetEnumerator();
                 }
 
+                bool isEmpty;
+
                 if (MoveNextValue())
                 {
                     return ReadingState.Value;
                 }
                 else if (MoveNextAttribute())
                 {
-                    return ReadingState.BeginAttribute;
+                    return ReadingState.Attribute;
                 }
-                else if (MoveNextItem())
+                else if (MoveNextItem(out isEmpty))
                 {
-                    return ReadingState.BeginItem;
+                    if (isEmpty)
+                    {
+                        return ReadingState.EmptyItem;
+                    }
+
+                    return ReadingState.Item;
                 }
 
                 return ReadingState.End;
@@ -346,7 +364,7 @@ namespace Stratosphere.Table.Sdb
                 {
                     if (_attributeEnumerator != null)
                     {
-                        return _attributeEnumerator.Current.Element(Sdb + "Name").Value;
+                        return _attributeEnumerator.Current.Key;
                     }
 
                     return string.Empty;
@@ -359,7 +377,7 @@ namespace Stratosphere.Table.Sdb
                 {
                     if (_valueEnumerator != null)
                     {
-                        return _valueEnumerator.Current.Value;
+                        return _valueEnumerator.Current.Element(Sdb + "Value").Value;
                     }
 
                     return string.Empty;
@@ -383,11 +401,6 @@ namespace Stratosphere.Table.Sdb
                     _itemEnumerator.Dispose();
                 }
             }
-        }
-
-        public IReader Select(string selectExpression)
-        {
-            return new Reader(SelectElements(selectExpression));
         }
 
         public IReader Select(IEnumerable<string> attributeNames, Condition condition)
@@ -421,6 +434,11 @@ namespace Stratosphere.Table.Sdb
                     Add("NextToken", nextToken);
                 }
             }
+        }
+
+        private IEnumerable<XElement> SelectElements(IEnumerable<string> attributeNames, Condition condition)
+        {
+            return SelectElements(_service, BuildSelectExpression(_domainName, attributeNames, condition, _selectLimit));
         }
 
         private static string BuildSelectExpression(string domainName, IEnumerable<string> attributeNames, Condition condition, int? selectLimit)
@@ -554,18 +572,13 @@ namespace Stratosphere.Table.Sdb
             return builder.ToString();
         }
 
-        private IEnumerable<XElement> SelectElements(IEnumerable<string> attributeNames, Condition condition)
-        {
-            return SelectElements(BuildSelectExpression(_domainName, attributeNames, condition, _selectLimit));
-        }
-
-        private IEnumerable<XElement> SelectElements(string selectExpression)
+        private static IEnumerable<XElement> SelectElements(SdbService service, string selectExpression)
         {
             string nextToken = null;
 
             do
             {
-                XElement responseElement = _service.Execute(
+                XElement responseElement = service.Execute(
                     new SelectBuilder(selectExpression, nextToken));
 
                 foreach (XElement itemElement in responseElement.Descendants(Sdb + "Item"))

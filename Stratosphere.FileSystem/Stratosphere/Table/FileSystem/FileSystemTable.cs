@@ -341,14 +341,14 @@ namespace Stratosphere.Table.FileSystem
                         _lastItemName = ItemName;
                         _lastAttributeName = AttributeName;
 
-                        return ReadingState.BeginItem;
+                        return ReadingState.Item;
                     }
                     
                     if (_lastAttributeName != AttributeName)
                     {
                         _lastAttributeName = AttributeName;
 
-                        return ReadingState.BeginAttribute;
+                        return ReadingState.Attribute;
                     }
 
                     return ReadingState.Value;
