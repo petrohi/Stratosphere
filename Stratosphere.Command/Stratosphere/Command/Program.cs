@@ -195,6 +195,8 @@ namespace Stratosphere.Command
     {
         private readonly CommandLineOptions _options;
 
+        private const string CreateBucketKey = "--create-bucket";
+        private const string DeleteBucketKey = "--delete-bucket";
         private const string ListBucketsKey = "--list-buckets";
         private const string ListObjectsKey = "--list-objects";
         private const string ListDomainsKey = "--list-domains";
@@ -203,6 +205,7 @@ namespace Stratosphere.Command
         private const string PutObjectKey = "--put-object";
         private const string GetObjectKey = "--get-object";
         private const string DeleteObjectKey = "--delete-object";
+        private const string DeleteObjectsPrefixKey = "--delete-objects-prefix";
         private const string SaveItemsKey = "--save-items";
         private const string LoadItemsKey = "--load-items";
         private const string SelectItemsKey = "--select-items";
@@ -222,6 +225,8 @@ namespace Stratosphere.Command
         {
             __parser = new CommandLineParser();
 
+            __parser.AddOption(CreateBucketKey, false, "'AwsSh " + CreateBucketKey + " <bucket URL>'\r\nCreate S3 bucket");
+            __parser.AddOption(DeleteBucketKey, false, "'AwsSh " + DeleteBucketKey + " <bucket URL>'\r\nDelete S3 bucket");
             __parser.AddOption(ListBucketsKey, false, "'AwsSh " + ListBucketsKey + "'\r\nList S3 buckets");
             __parser.AddOption(ListObjectsKey, false, "'AwsSh " + ListObjectsKey + " <bucket URL>'\r\nList S3 objects");
             __parser.AddOption(ListDomainsKey, false, "'AwsSh " + ListDomainsKey + "'\r\nList SimpleDB domains");
@@ -230,6 +235,7 @@ namespace Stratosphere.Command
             __parser.AddOption(PutObjectKey, false, "'AwsSh " + PutObjectKey + " <object URL> [" + FileNameKey + " <file name>]'\r\nPuts S3 object\r\nIf " + FileNameKey + " not specified then file name must match object name");
             __parser.AddOption(GetObjectKey, false, "'AwsSh " + GetObjectKey + " <object URL> [" + FileNameKey + " <file name>]'\r\nGets S3 object\r\nIf " + FileNameKey + " not specified file name will match object name");
             __parser.AddOption(DeleteObjectKey, false, "'AwsSh " + DeleteObjectKey + " <object URL>'\r\nDeletes S3 object");
+            __parser.AddOption(DeleteObjectsPrefixKey, false, "'AwsSh " + DeleteObjectKey + " <object URL prefix>'\r\nDeletes all S3 objects starting with prefix");
             __parser.AddOption(SaveItemsKey, false, "'AwsSh " + SaveItemsKey + " <domain name> " + FileNameKey + " <file name>'\r\nSaves SimpleDB domain items to XML file");
             __parser.AddOption(LoadItemsKey, false, "'AwsSh " + LoadItemsKey + " <domain name> " + FileNameKey + " <file name>'\r\nLoads SimpleDB domain items from XML file");
             __parser.AddOption(SelectItemsKey, false, "'AwsSh " + SelectItemsKey + " <select expression>'\r\nExecutes SimpleDB select expression");
@@ -292,6 +298,7 @@ namespace Stratosphere.Command
             string queueNamePrefix;
             string selectExpression;
             string objectPath;
+            string objectPathPrefix;
             string fileName;
             string helpOptionName;
 
@@ -312,6 +319,14 @@ namespace Stratosphere.Command
                 else if (_options.Contains(ListQueuesKey))
                 {
                     ListQueues();
+                }
+                else if (_options.TryGet(CreateBucketKey, out containerName))
+                {
+                    CreateBucket(containerName);
+                }
+                else if (_options.TryGet(DeleteBucketKey, out containerName))
+                {
+                    DeleteBucket(containerName);
                 }
                 else if (_options.TryGet(ListObjectsKey, out containerName))
                 {
@@ -360,6 +375,10 @@ namespace Stratosphere.Command
                 else if (_options.TryGet(DeleteObjectKey, out objectPath))
                 {
                     DeleteObject(objectPath);
+                }
+                else if (_options.TryGet(DeleteObjectsPrefixKey, out objectPathPrefix))
+                {
+                    DeleteObjects(objectPathPrefix);
                 }
                 else if (
                     _options.TryGet(SaveItemsKey, out domainName) &&
@@ -454,6 +473,21 @@ namespace Stratosphere.Command
 
                 console.WriteLine(table.Name, itemCount, sizeBytes);
             }
+        }
+
+        private void CreateBucket(string containerName)
+        {
+            S3Container.Create(ServiceId, ServiceSecret, containerName);
+            
+            Console.WriteLine("Created {0} bucket", containerName);
+        }
+
+        private void DeleteBucket(string containerName)
+        {
+            IContainer container = S3Container.Get(ServiceId, ServiceSecret, containerName);
+            container.Delete();
+
+            Console.WriteLine("Deleted {0} bucket", containerName);
         }
 
         private void ListObjects(string containerName)
@@ -651,7 +685,33 @@ namespace Stratosphere.Command
                 IContainer container = S3Container.Get(ServiceId, ServiceSecret, containerName);
                 IBlock block = container.GetBlock(blockName);
                 block.Delete();
+
+                Console.WriteLine("Deleted {0} object", path);
             }
+        }
+
+        private void DeleteObjects(string pathPrefix)
+        {
+            int deletedCount = 0;
+
+            string containerName;
+            string blockNamePrefix;
+
+            if (TryParsePath(pathPrefix, out containerName, out blockNamePrefix))
+            {
+                IContainer container = S3Container.Get(ServiceId, ServiceSecret, containerName);
+
+                foreach (IBlock block in container.ListBlocks())
+                {
+                    if (block.Name.StartsWith(blockNamePrefix))
+                    {
+                        block.Delete();
+                        deletedCount++;
+                    }
+                }
+            }
+
+            Console.WriteLine("Deleted {0} queues", deletedCount);
         }
 
         private void GetObject(string path, string fileName)

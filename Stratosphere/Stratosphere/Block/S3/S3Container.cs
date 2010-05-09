@@ -26,6 +26,13 @@ namespace Stratosphere.Block.S3
             return new S3Container(new S3Service(serviceId, serviceSecret), name, DateTime.MinValue);
         }
 
+        public static S3Container Create(string serviceId, string serviceSecret, string name)
+        {
+            S3Service service = new S3Service(serviceId, serviceSecret);
+            GetResponse(service.CreateRequest(PutMethod, name));
+            return new S3Container(service, name, DateTime.MinValue);
+        }
+
         private S3Container(S3Service service, string name, DateTime creationDate)
         {
             _service = service;
@@ -53,5 +60,10 @@ namespace Stratosphere.Block.S3
         }
 
         public IBlock GetBlock(string name) { return new S3Block(_service, _name, name, DateTime.MinValue, 0); }
+
+        public void Delete()
+        {
+            GetResponse(_service.CreateRequest(DeleteMethod, _name));
+        }
     }
 }

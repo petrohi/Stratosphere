@@ -41,5 +41,13 @@ namespace Stratosphere.Block.FileSystem
         {
             return new FileSystemBlock(Path.Combine(_directoryName, name));
         }
+
+        public void Delete()
+        {
+            if (Directory.Exists(_directoryName))
+            {
+                Directory.Delete(_directoryName);
+            }
+        }
     }
 }

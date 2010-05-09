@@ -12,5 +12,7 @@ namespace Stratosphere.Block
 
         IEnumerable<IBlock> ListBlocks();
         IBlock GetBlock(string name);
+
+        void Delete();
     }
 }
