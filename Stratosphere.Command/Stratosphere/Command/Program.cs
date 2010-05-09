@@ -109,7 +109,7 @@ namespace Stratosphere.Command
             public ParsedCommandLineOptions(string commandLine, Dictionary<string, Option> options)
             {
                 string[] names = options.Keys.ToArray();
-                int[] positions = names.Select(n => commandLine.IndexOf(n + ' ')).ToArray();
+                int[] positions = names.Select(n => commandLine.IndexOf(n)).ToArray();
 
                 for (int i = 0; i < positions.Length; i++)
                 {
@@ -135,7 +135,7 @@ namespace Stratosphere.Command
                             value = commandLine.Substring(start);
                         }
 
-                        _parsed.Add(names[i], value.Trim());
+                        _parsed.Add(names[i], value.Trim().Trim(new char[] { '"' }));
                     }
                 }
             }
@@ -205,17 +205,17 @@ namespace Stratosphere.Command
         private const string PutObjectKey = "--put-object";
         private const string GetObjectKey = "--get-object";
         private const string DeleteObjectKey = "--delete-object";
-        private const string DeleteObjectsPrefixKey = "--delete-objects-prefix";
+        private const string DeletePrefixedObjectsKey = "--delete-prefixed-objects";
         private const string SaveItemsKey = "--save-items";
         private const string LoadItemsKey = "--load-items";
         private const string SelectItemsKey = "--select-items";
         private const string SelectSaveItemsKey = "--select-save-items";
         private const string CreateDomainKey = "--create-domain";
         private const string DeleteDomainKey = "--delete-domain";
-        private const string DeleteDomainsPrefixKey = "--delete-domains-prefix";
+        private const string DeletePrefixedDomainsKey = "--delete-prefixed-domains";
         private const string CreateQueueKey = "--create-queue";
         private const string DeleteQueueKey = "--delete-queue";
-        private const string DeleteQueuesPrefixKey = "--delete-queues-prefix";
+        private const string DeletePrefixedQueuesKey = "--delete-prefixed-queues";
         private const string HelpKey = "--help";
         private const string FileNameKey = "--file-name";
         private const string ServiceIdKey = "--service-id";
@@ -232,24 +232,24 @@ namespace Stratosphere.Command
             __parser.AddOption(ListDomainsKey, false, "'AwsSh " + ListDomainsKey + "'\r\nList SimpleDB domains");
             __parser.AddOption(ListItemsKey, false, "'AwsSh " + ListItemsKey + " <domain name>'\r\nList SimpleDB domain items");
             __parser.AddOption(ListQueuesKey, false, "'AwsSh " + ListQueuesKey + "'\r\nList SQS queues");
-            __parser.AddOption(PutObjectKey, false, "'AwsSh " + PutObjectKey + " <object URL> [" + FileNameKey + " <file name>]'\r\nPuts S3 object\r\nIf " + FileNameKey + " not specified then file name must match object name");
-            __parser.AddOption(GetObjectKey, false, "'AwsSh " + GetObjectKey + " <object URL> [" + FileNameKey + " <file name>]'\r\nGets S3 object\r\nIf " + FileNameKey + " not specified file name will match object name");
-            __parser.AddOption(DeleteObjectKey, false, "'AwsSh " + DeleteObjectKey + " <object URL>'\r\nDeletes S3 object");
-            __parser.AddOption(DeleteObjectsPrefixKey, false, "'AwsSh " + DeleteObjectKey + " <object URL prefix>'\r\nDeletes all S3 objects starting with prefix");
-            __parser.AddOption(SaveItemsKey, false, "'AwsSh " + SaveItemsKey + " <domain name> " + FileNameKey + " <file name>'\r\nSaves SimpleDB domain items to XML file");
-            __parser.AddOption(LoadItemsKey, false, "'AwsSh " + LoadItemsKey + " <domain name> " + FileNameKey + " <file name>'\r\nLoads SimpleDB domain items from XML file");
-            __parser.AddOption(SelectItemsKey, false, "'AwsSh " + SelectItemsKey + " <select expression>'\r\nExecutes SimpleDB select expression");
-            __parser.AddOption(SelectSaveItemsKey, false, "'AwsSh " + SelectSaveItemsKey + " <select expression>" + FileNameKey + " <file name>'\r\nExecutes SimpleDB select expression and saves items to XML file");
-            __parser.AddOption(CreateDomainKey, false, "'AwsSh " + CreateDomainKey + " <domain name>'\r\nCreates SimpleDB domain");
-            __parser.AddOption(DeleteDomainKey, false, "'AwsSh " + DeleteDomainKey + " <domain name>'\r\nDeletes SimpleDB domain");
-            __parser.AddOption(DeleteDomainsPrefixKey, false, "'AwsSh " + DeleteDomainsPrefixKey + " <domain name prefix>'\r\nDeletes all SimpleDB domains starting with prefix");
-            __parser.AddOption(CreateQueueKey, false, "'AwsSh " + CreateQueueKey + " <queue name>'\r\nCreates SQS queue");
-            __parser.AddOption(DeleteQueueKey, false, "'AwsSh " + DeleteQueueKey + " <queue name>'\r\nDeletes SQS queue");
-            __parser.AddOption(DeleteQueuesPrefixKey, false, "'AwsSh " + DeleteQueuesPrefixKey + " <queue name prefix>'\r\nDeletes all SQS queues starting with prefix");
+            __parser.AddOption(PutObjectKey, false, "'AwsSh " + PutObjectKey + " <object URL> [" + FileNameKey + " <file name>]'\r\nPut S3 object\r\nIf " + FileNameKey + " not specified then file name must match object name");
+            __parser.AddOption(GetObjectKey, false, "'AwsSh " + GetObjectKey + " <object URL> [" + FileNameKey + " <file name>]'\r\nGet S3 object\r\nIf " + FileNameKey + " not specified file name will match object name");
+            __parser.AddOption(DeleteObjectKey, false, "'AwsSh " + DeleteObjectKey + " <object URL>'\r\nDelete S3 object");
+            __parser.AddOption(DeletePrefixedObjectsKey, false, "'AwsSh " + DeleteObjectKey + " <object URL prefix>'\r\nDelete all S3 objects starting with prefix");
+            __parser.AddOption(SaveItemsKey, false, "'AwsSh " + SaveItemsKey + " <domain name> " + FileNameKey + " <XML file name>'\r\nSave SimpleDB domain items to XML file");
+            __parser.AddOption(LoadItemsKey, false, "'AwsSh " + LoadItemsKey + " <domain name> " + FileNameKey + " <XML file name>'\r\nLoad SimpleDB domain items from XML file");
+            __parser.AddOption(SelectItemsKey, false, "'AwsSh " + SelectItemsKey + " <select expression>'\r\nExecute SimpleDB select expression");
+            __parser.AddOption(SelectSaveItemsKey, false, "'AwsSh " + SelectSaveItemsKey + " <select expression>" + FileNameKey + " <XML file name>'\r\nExecute SimpleDB select expression and save items to XML file");
+            __parser.AddOption(CreateDomainKey, false, "'AwsSh " + CreateDomainKey + " <domain name>'\r\nCreate SimpleDB domain");
+            __parser.AddOption(DeleteDomainKey, false, "'AwsSh " + DeleteDomainKey + " <domain name>'\r\nDelete SimpleDB domain");
+            __parser.AddOption(DeletePrefixedDomainsKey, false, "'AwsSh " + DeletePrefixedDomainsKey + " <domain name prefix>'\r\nDelete all SimpleDB domains starting with prefix");
+            __parser.AddOption(CreateQueueKey, false, "'AwsSh " + CreateQueueKey + " <queue name>'\r\nCreate SQS queue");
+            __parser.AddOption(DeleteQueueKey, false, "'AwsSh " + DeleteQueueKey + " <queue name>'\r\nDelete SQS queue");
+            __parser.AddOption(DeletePrefixedQueuesKey, false, "'AwsSh " + DeletePrefixedQueuesKey + " <queue name prefix>'\r\nDelete all SQS queues starting with prefix");
             __parser.AddOption(HelpKey, true, "'AwsSh " + HelpKey + " [option]'\r\nPrint help");
-            __parser.AddOption(FileNameKey, false, "'AwsSh " + ListBucketsKey + " <file name>'\r\nSpecifies file name for corresponding option");
-            __parser.AddOption(ServiceIdKey, false, "'AwsSh " + ServiceIdKey + " <service id>'\r\nSpecifies AWS service ID\r\nCan be also specified with AWS_SERVICE_ID environment variable");
-            __parser.AddOption(ServiceSecretKey, false, "'AwsSh " + ServiceSecretKey + " <service id>'\r\nSpecifies AWS service secret\r\nCan be also specified with AWS_SERVICE_SECRET environment variable");
+            __parser.AddOption(FileNameKey, false, "'AwsSh " + ListBucketsKey + " <file name>'\r\nSpecify file name for corresponding option");
+            __parser.AddOption(ServiceIdKey, false, "'AwsSh " + ServiceIdKey + " <service id>'\r\nSpecify AWS service ID\r\nAlternatively can be specified with AWS_SERVICE_ID environment variable");
+            __parser.AddOption(ServiceSecretKey, false, "'AwsSh " + ServiceSecretKey + " <service id>'\r\nSpecify AWS service secret\r\nAlternatively can be specified with AWS_SERVICE_SECRET environment variable");
         }
 
         private static readonly CommandLineParser __parser;
@@ -344,7 +344,7 @@ namespace Stratosphere.Command
                 {
                     DeleteDomain(domainName);
                 }
-                else if (_options.TryGet(DeleteDomainsPrefixKey, out domainNamePrefix))
+                else if (_options.TryGet(DeletePrefixedDomainsKey, out domainNamePrefix))
                 {
                     DeleteDomains(domainNamePrefix);
                 }
@@ -356,7 +356,7 @@ namespace Stratosphere.Command
                 {
                     DeleteQueue(queueName);
                 }
-                else if (_options.TryGet(DeleteQueuesPrefixKey, out queueNamePrefix))
+                else if (_options.TryGet(DeletePrefixedQueuesKey, out queueNamePrefix))
                 {
                     DeleteQueues(queueNamePrefix);
                 }
@@ -376,7 +376,7 @@ namespace Stratosphere.Command
                 {
                     DeleteObject(objectPath);
                 }
-                else if (_options.TryGet(DeleteObjectsPrefixKey, out objectPathPrefix))
+                else if (_options.TryGet(DeletePrefixedObjectsKey, out objectPathPrefix))
                 {
                     DeleteObjects(objectPathPrefix);
                 }
@@ -416,9 +416,6 @@ namespace Stratosphere.Command
 
         private void WriteHelp(string optionName)
         {
-            Console.WriteLine("Amazon Web Services Shell");
-            Console.WriteLine();
-
             if (string.IsNullOrEmpty(optionName))
             {
                 __parser.WriteOptions();
