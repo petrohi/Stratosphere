@@ -109,7 +109,7 @@ namespace Stratosphere.Command
             public ParsedCommandLineOptions(string commandLine, Dictionary<string, Option> options)
             {
                 string[] names = options.Keys.ToArray();
-                int[] positions = names.Select(n => commandLine.IndexOf(n)).ToArray();
+                int[] positions = names.Select(n => commandLine.IndexOf(n + ' ')).ToArray();
 
                 for (int i = 0; i < positions.Length; i++)
                 {
@@ -204,9 +204,15 @@ namespace Stratosphere.Command
         private const string GetObjectKey = "--get-object";
         private const string DeleteObjectKey = "--delete-object";
         private const string SaveItemsKey = "--save-items";
-        //private const string LoadItemsKey = "--load-items";
+        private const string LoadItemsKey = "--load-items";
         private const string SelectItemsKey = "--select-items";
         private const string SelectSaveItemsKey = "--select-save-items";
+        private const string CreateDomainKey = "--create-domain";
+        private const string DeleteDomainKey = "--delete-domain";
+        private const string DeleteDomainsPrefixKey = "--delete-domains-prefix";
+        private const string CreateQueueKey = "--create-queue";
+        private const string DeleteQueueKey = "--delete-queue";
+        private const string DeleteQueuesPrefixKey = "--delete-queues-prefix";
         private const string HelpKey = "--help";
         private const string FileNameKey = "--file-name";
         private const string ServiceIdKey = "--service-id";
@@ -225,9 +231,15 @@ namespace Stratosphere.Command
             __parser.AddOption(GetObjectKey, false, "'AwsSh " + GetObjectKey + " <object URL> [" + FileNameKey + " <file name>]'\r\nGets S3 object\r\nIf " + FileNameKey + " not specified file name will match object name");
             __parser.AddOption(DeleteObjectKey, false, "'AwsSh " + DeleteObjectKey + " <object URL>'\r\nDeletes S3 object");
             __parser.AddOption(SaveItemsKey, false, "'AwsSh " + SaveItemsKey + " <domain name> " + FileNameKey + " <file name>'\r\nSaves SimpleDB domain items to XML file");
-            //__parser.AddOption(LoadItemsKey, false, "'AwsSh " + LoadItemsKey + " <domain name> " + FileNameKey + " <file name>'\r\nLoads SimpleDB domain items from XML file");
+            __parser.AddOption(LoadItemsKey, false, "'AwsSh " + LoadItemsKey + " <domain name> " + FileNameKey + " <file name>'\r\nLoads SimpleDB domain items from XML file");
             __parser.AddOption(SelectItemsKey, false, "'AwsSh " + SelectItemsKey + " <select expression>'\r\nExecutes SimpleDB select expression");
             __parser.AddOption(SelectSaveItemsKey, false, "'AwsSh " + SelectSaveItemsKey + " <select expression>" + FileNameKey + " <file name>'\r\nExecutes SimpleDB select expression and saves items to XML file");
+            __parser.AddOption(CreateDomainKey, false, "'AwsSh " + CreateDomainKey + " <domain name>'\r\nCreates SimpleDB domain");
+            __parser.AddOption(DeleteDomainKey, false, "'AwsSh " + DeleteDomainKey + " <domain name>'\r\nDeletes SimpleDB domain");
+            __parser.AddOption(DeleteDomainsPrefixKey, false, "'AwsSh " + DeleteDomainsPrefixKey + " <domain name prefix>'\r\nDeletes all SimpleDB domains starting with prefix");
+            __parser.AddOption(CreateQueueKey, false, "'AwsSh " + CreateQueueKey + " <queue name>'\r\nCreates SQS queue");
+            __parser.AddOption(DeleteQueueKey, false, "'AwsSh " + DeleteQueueKey + " <queue name>'\r\nDeletes SQS queue");
+            __parser.AddOption(DeleteQueuesPrefixKey, false, "'AwsSh " + DeleteQueuesPrefixKey + " <queue name prefix>'\r\nDeletes all SQS queues starting with prefix");
             __parser.AddOption(HelpKey, true, "'AwsSh " + HelpKey + " [option]'\r\nPrint help");
             __parser.AddOption(FileNameKey, false, "'AwsSh " + ListBucketsKey + " <file name>'\r\nSpecifies file name for corresponding option");
             __parser.AddOption(ServiceIdKey, false, "'AwsSh " + ServiceIdKey + " <service id>'\r\nSpecifies AWS service ID\r\nCan be also specified with AWS_SERVICE_ID environment variable");
@@ -275,6 +287,9 @@ namespace Stratosphere.Command
         {
             string containerName;
             string domainName;
+            string domainNamePrefix;
+            string queueName;
+            string queueNamePrefix;
             string selectExpression;
             string objectPath;
             string fileName;
@@ -306,6 +321,30 @@ namespace Stratosphere.Command
                 {
                     ListItems(domainName);
                 }
+                else if (_options.TryGet(CreateDomainKey, out domainName))
+                {
+                    CreateDomain(domainName);
+                }
+                else if (_options.TryGet(DeleteDomainKey, out domainName))
+                {
+                    DeleteDomain(domainName);
+                }
+                else if (_options.TryGet(DeleteDomainsPrefixKey, out domainNamePrefix))
+                {
+                    DeleteDomains(domainNamePrefix);
+                }
+                else if (_options.TryGet(CreateQueueKey, out queueName))
+                {
+                    CreateQueue(queueName);
+                }
+                else if (_options.TryGet(DeleteQueueKey, out queueName))
+                {
+                    DeleteQueue(queueName);
+                }
+                else if (_options.TryGet(DeleteQueuesPrefixKey, out queueNamePrefix))
+                {
+                    DeleteQueues(queueNamePrefix);
+                }
                 else if (_options.TryGet(SelectItemsKey, out selectExpression))
                 {
                     SelectItems(selectExpression);
@@ -328,12 +367,12 @@ namespace Stratosphere.Command
                 {
                     SaveItems(domainName, fileName);
                 }
-                /*else if (
+                else if (
                     _options.TryGet(LoadItemsKey, out domainName) &&
                     _options.TryGet(FileNameKey, out fileName))
                 {
                     LoadItems(domainName, fileName);
-                }*/
+                }
                 else if (
                     _options.TryGet(SelectSaveItemsKey, out selectExpression) &&
                     _options.TryGet(FileNameKey, out fileName))
@@ -446,6 +485,86 @@ namespace Stratosphere.Command
             }
         }
 
+        private void DeleteDomains(string domainNamePrefix)
+        {
+            int deletedCount = 0;
+
+            foreach (SdbTable table in SdbTable.ListTables(ServiceId, ServiceSecret))
+            {
+                if (table.Name.StartsWith(domainNamePrefix))
+                {
+                    table.Delete();
+
+                    deletedCount++;
+                }
+            }
+
+            Console.WriteLine("Deleted {0} domains", deletedCount);
+        }
+
+        private void CreateDomain(string domainName)
+        {
+            SdbTable.Create(ServiceId, ServiceSecret, domainName);
+
+            Console.WriteLine("Created {0} domain", domainName);
+        }
+
+        private void DeleteDomain(string domainName)
+        {
+            SdbTable table;
+
+            if (SdbTable.TryCreate(ServiceId, ServiceSecret, domainName, null, false, out table))
+            {
+                table.Delete();
+
+                Console.WriteLine("Deleted {0} domain", domainName);
+            }
+            else
+            {
+                Console.WriteLine("Domain does not exist");
+            }
+        }
+
+        private void DeleteQueues(string queueNamePrefix)
+        {
+            int deletedCount = 0;
+
+            foreach (SqsQueue queue in SqsQueue.ListQueues(ServiceId, ServiceSecret))
+            {
+                if (queue.Name.StartsWith(queueNamePrefix))
+                {
+                    queue.Delete();
+
+                    deletedCount++;
+                }
+            }
+
+            Console.WriteLine("Deleted {0} queues", deletedCount);
+        }
+
+        private void CreateQueue(string queueName)
+        {
+            SqsQueue.Create(ServiceId, ServiceSecret, queueName);
+
+            Console.WriteLine("Created {0} queue", queueName);
+        }
+
+        private void DeleteQueue(string queueName)
+        {
+            SqsQueue queue;
+
+            if (SqsQueue.TryCreate(ServiceId, ServiceSecret, queueName, false, out queue))
+            {
+                queue.Delete();
+
+                Console.WriteLine("Deleted {0} queue", queueName);
+            }
+            else
+            {
+                Console.WriteLine("Queue does not exist");
+            }
+        }
+
         private void ListItems(string domainName)
         {
             SdbTable table;
@@ -459,7 +578,7 @@ namespace Stratosphere.Command
             }
             else
             {
-                Console.WriteLine("Table does not exist");
+                Console.WriteLine("Domain does not exist");
             }
         }
 
@@ -594,6 +713,49 @@ namespace Stratosphere.Command
             {
                 using (XmlReader reader = XmlReader.Create(stream))
                 {
+                    SdbTable table = SdbTable.Create(ServiceId, ServiceSecret, domainName);
+
+                    while (reader.Read())
+                    {
+                        if (reader.NodeType == XmlNodeType.Element)
+                        {
+                            if (reader.LocalName == "Item")
+                            {
+                                int depth = reader.Depth;
+
+                                if (reader.MoveToAttribute("Name"))
+                                {
+                                    string itemName = reader.Value;
+                                    reader.MoveToElement();
+
+                                    table.Put(itemName, w =>
+                                    {
+                                        while (reader.Read() && reader.Depth > depth)
+                                        {
+                                            if (reader.NodeType == XmlNodeType.Element &&
+                                                !reader.IsEmptyElement)
+                                            {
+                                                string name = XmlConvert.DecodeName(reader.LocalName);
+
+                                                if (reader.Read())
+                                                {
+                                                    string value = reader.ReadContentAsString();
+
+                                                    if (!string.IsNullOrEmpty(value))
+                                                    {
+                                                        w.AddAttribute(name, value);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    });
+
+                                    readCount++;
+                                    WriteProgress("Loaded {0} items", readCount);
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -630,7 +792,7 @@ namespace Stratosphere.Command
             }
             else
             {
-                Console.WriteLine("Table does not exist");
+                Console.WriteLine("Domain does not exist");
             }
         }
 
