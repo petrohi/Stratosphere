@@ -93,6 +93,11 @@
       <Link>zip.cmd</Link>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\Version.txt">
+      <Link>Version.txt</Link>
+    </Content>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy /E /C /I /R /Y /Q "$(TargetDir)*.*" "$(ProjectDir)..\Output"</PostBuildEvent>
