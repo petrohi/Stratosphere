@@ -982,21 +982,14 @@ namespace Stratosphere.Command
 
                     BeginWriteItem(writer, reader);
 
-                    if (state == ReadingState.EmptyItem)
+                    if (!itemBegan)
                     {
-                        writer.WriteEndElement();
-
-                        if (itemBegan)
-                        {
-                            itemBegan = false;
-                        }
+                        itemBegan = true;
                     }
-                    else
+
+                    if (state != ReadingState.EmptyItem)
                     {
-                        if (!itemBegan)
-                        {
-                            itemBegan = true;
-                        }
+                        WriteAttribute(writer, reader);
                     }
 
                     if (expectedCount != -1)
@@ -1031,8 +1024,6 @@ namespace Stratosphere.Command
         {
             writer.WriteStartElement("Item");
             writer.WriteAttributeString("Name", reader.ItemName);
-
-            WriteAttribute(writer, reader);
         }
 
         private static void WriteAttribute(XmlWriter writer, IReader reader)
