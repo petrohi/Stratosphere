@@ -458,29 +458,134 @@ namespace Stratosphere.Table.Sdb
             return builder.ToString();
         }
 
+        private static string EncodeConditionAttributeValue(string value)
+        {
+            return value.Replace("'", "''");
+        }
+
+        private static string GetConditionAttributeName(string name, bool everyAttribute)
+        {
+            if (everyAttribute)
+            {
+                return string.Format("every({0})", name);
+            }
+
+            return name;
+        }
+
+        private static string GetValueTestOperator(ValueTest test)
+        {
+            switch (test)
+            {
+                case ValueTest.Equal:
+                    return "=";
+
+                case ValueTest.NotEqual:
+                    return "!=";
+
+                case ValueTest.LessThan:
+                    return "<";
+
+                case ValueTest.GreaterThan:
+                    return ">";
+
+                case ValueTest.LessOrEqual:
+                    return "<=";
+
+                case ValueTest.GreaterOrEqual:
+                    return ">=";
+
+                case ValueTest.Like:
+                    return " like ";
+
+                case ValueTest.NotLike:
+                    return " not like ";
+            }
+
+            throw new ArgumentException("Value test is not supported");
+        }
+
+        private static string ContinueBuildWhereClause(AttributeCondition condition, bool everyAttribute)
+        {
+            AttributeValueCondition valueCondition;
+            AttributeIsNullCondition isNullCondition;
+            AttributeIsNotNullCondition isNotNullCondition;
+            AttributeValueBetweenCondition valueBetweenCondition;
+            AttributeValueInCondition valueInCondition;
+
+            if ((valueCondition = condition as AttributeValueCondition) != null)
+            {
+                return string.Format("{0}{1}'{2}'", 
+                    GetConditionAttributeName(valueCondition.Pair.Key, everyAttribute),
+                    GetValueTestOperator(valueCondition.Test),
+                    EncodeConditionAttributeValue(valueCondition.Pair.Value));
+            }
+            else if ((isNullCondition = condition as AttributeIsNullCondition) != null)
+            {
+                return string.Format("{0} is null", GetConditionAttributeName(isNullCondition.Name, everyAttribute));
+            }
+            else if ((isNotNullCondition = condition as AttributeIsNotNullCondition) != null)
+            {
+                return string.Format("{0} is not null", GetConditionAttributeName(isNotNullCondition.Name, everyAttribute));
+            }
+            else if ((valueBetweenCondition = condition as AttributeValueBetweenCondition) != null)
+            {
+                return string.Format("{0} between '{1}' and '{2}'",
+                    GetConditionAttributeName(valueBetweenCondition.Name, everyAttribute),
+                    EncodeConditionAttributeValue(valueBetweenCondition.LowerValue),
+                    EncodeConditionAttributeValue(valueBetweenCondition.UpperValue));
+            }
+            else if ((valueInCondition = condition as AttributeValueInCondition) != null)
+            {
+                StringBuilder builder = new StringBuilder();
+                builder.AppendFormat("{0} in(", GetConditionAttributeName(valueInCondition.Name, everyAttribute));
+
+                bool isFirst = true;
+
+                foreach (string value in valueInCondition.Values)
+                {
+                    if (isFirst)
+                    {
+                        isFirst = false;
+                    }
+                    else
+                    {
+                        builder.Append(",");
+                    }
+
+                    builder.AppendFormat("'{0}'", EncodeConditionAttributeValue(value));
+                }
+
+                if (isFirst)
+                {
+                    throw new ArgumentException("Value in condition values are empty");
+                }
+
+                builder.Append(")");
+                return builder.ToString();
+            }
+
+            throw new ArgumentException("Condition is not supported");
+        }
+
         private static string ContinueBuildWhereClause(Condition condition)
         {
             ItemNameCondition itemNameCondition;
-            AttributeValueCondition attributeValueCondition;
-            AttributeIsNullCondition attributeIsNullCondition;
-            AttributeIsNotNullCondition attributeIsNotNullCondition;
+            AttributeCondition attributeCondition;
+            EveryAttributeCondition everyAttributeCondition;
             GroupCondition groupCondition;
 
             if ((itemNameCondition = condition as ItemNameCondition) != null)
             {
                 return string.Format("itemName()='{0}'", (string)itemNameCondition.ItemName);
             }
-            else if ((attributeValueCondition = condition as AttributeValueCondition) != null)
+            else if ((attributeCondition = condition as AttributeCondition) != null)
             {
-                return string.Format("{0}='{1}'", attributeValueCondition.Pair.Key, attributeValueCondition.Pair.Value);
+                return ContinueBuildWhereClause(attributeCondition, false);
             }
-            else if ((attributeIsNullCondition = condition as AttributeIsNullCondition) != null)
+            else if ((everyAttributeCondition = condition as EveryAttributeCondition) != null)
             {
-                return string.Format("{0} is null", attributeIsNullCondition.Name);
-            }
-            else if ((attributeIsNotNullCondition = condition as AttributeIsNotNullCondition) != null)
-            {
-                return string.Format("{0} is not null", attributeIsNotNullCondition.Name);
+                return ContinueBuildWhereClause(everyAttributeCondition.Condition, true);
             }
             else if ((groupCondition = condition as GroupCondition) != null)
             {
@@ -500,11 +605,11 @@ namespace Stratosphere.Table.Sdb
                         {
                             if (builder.Length != 0)
                             {
-                                if (groupCondition.Operator == GroupConditionOperator.And)
+                                if (groupCondition.Operator == GroupOperator.And)
                                 {
                                     builder.Append(" and ");
                                 }
-                                else if (groupCondition.Operator == GroupConditionOperator.Or)
+                                else if (groupCondition.Operator == GroupOperator.Or)
                                 {
                                     builder.Append(" or ");
                                 }

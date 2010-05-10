@@ -426,7 +426,7 @@ namespace Stratosphere.Table.FileSystem
             private string ContinueBuildWhereClause(IDbCommand command, Condition condition)
             {
                 ItemNameCondition identityCondition;
-                AttributeValueCondition pairCondition;
+                AttributeValueCondition valueCondition;
                 AttributeIsNullCondition keyIsNullCondition;
                 AttributeIsNotNullCondition keyIsNotNullCondition;
                 GroupCondition groupCondition;
@@ -438,13 +438,13 @@ namespace Stratosphere.Table.FileSystem
 
                     return string.Format("i.name={0}", parameterName);
                 }
-                else if ((pairCondition = condition as AttributeValueCondition) != null)
+                else if ((valueCondition = condition as AttributeValueCondition) != null && valueCondition.Test == ValueTest.Equal)
                 {
                     string nameParameterName = FormatParameterName("@aname{0}");
                     string valueParameterName = FormatParameterName("@avalue{0}");
 
-                    AddParameter(command, nameParameterName, pairCondition.Pair.Key);
-                    AddParameter(command, valueParameterName, pairCondition.Pair.Value);
+                    AddParameter(command, nameParameterName, valueCondition.Pair.Key);
+                    AddParameter(command, valueParameterName, valueCondition.Pair.Value);
 
                     return string.Format("i.num in (select a.inum from attribute a where a.name={0} and a.value={1})",
                         nameParameterName, valueParameterName);
@@ -483,11 +483,11 @@ namespace Stratosphere.Table.FileSystem
                             {
                                 if (builder.Length != 0)
                                 {
-                                    if (groupCondition.Operator == GroupConditionOperator.And)
+                                    if (groupCondition.Operator == GroupOperator.And)
                                     {
                                         builder.Append(" and ");
                                     }
-                                    else if (groupCondition.Operator == GroupConditionOperator.Or)
+                                    else if (groupCondition.Operator == GroupOperator.Or)
                                     {
                                         builder.Append(" or ");
                                     }
