@@ -3,6 +3,8 @@
 using System;
 using Stratosphere.Table.Sdb;
 using Stratosphere.Test;
+using Stratosphere.Aws;
+using System.Collections.Generic;
 
 namespace Stratosphere.Table.Test
 {
@@ -15,15 +17,50 @@ namespace Stratosphere.Table.Test
         {
             return string.Format(DomainNameFormat, Guid.NewGuid().ToString().Replace("-", string.Empty));
         }
+
+        protected sealed class ReliableSdbTable : ITable
+        {
+            private readonly ITable _table;
+
+            public ReliableSdbTable(ITable table)
+            {
+                _table = table;
+            }
+
+            public void Delete()
+            {
+                AmazonReliability.Execute(() => { _table.Delete(); });
+            }
+
+            public void Put(string name, System.Action<IPutWriter> action)
+            {
+                AmazonReliability.Execute(() => { _table.Put(name, action); });
+            }
+
+            public void Delete(string name, System.Action<IDeleteWriter> action)
+            {
+                AmazonReliability.Execute(() => { _table.Delete(name, action); });
+            }
+
+            public IReader Select(IEnumerable<string> attributeNames, Condition condition)
+            {
+                return AmazonReliability.Execute(() => _table.Select(attributeNames, condition));
+            }
+
+            public long SelectCount(Condition condition)
+            {
+                return AmazonReliability.Execute(() => _table.SelectCount(condition));
+            }
+        }
     }
 
     public sealed class SdbTableTest : SdbTableTestBase
     {
         protected override ITable CreateTable()
         {
-            return new DelayedTable(SdbTable.Create(
+            return AmazonReliability.Execute(() => new ReliableSdbTable(new DelayedTable(SdbTable.Create(
                 AmazonTest.ServiceId, AmazonTest.ServiceSecret,
-                GetNextDomainName(), null),DelayMilliseconds);
+                GetNextDomainName(), null),DelayMilliseconds)));
         }
     }
 
@@ -33,9 +70,9 @@ namespace Stratosphere.Table.Test
 
         protected override ITable CreateTable()
         {
-            return new DelayedTable(SdbTable.Create(
+            return AmazonReliability.Execute(() => new ReliableSdbTable(new DelayedTable(SdbTable.Create(
                 AmazonTest.ServiceId, AmazonTest.ServiceSecret,
-                GetNextDomainName(), SelectLimit), DelayMilliseconds);
+                GetNextDomainName(), SelectLimit), DelayMilliseconds)));
         }
     }
 }
