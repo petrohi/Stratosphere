@@ -13,12 +13,10 @@ namespace Stratosphere.Table
 
             using (IReader reader = table.Select(new string[] { "itemName()" }, null))
             {
-                ReadingState state;
-
-                while ((state = reader.Read()) != ReadingState.End)
+                while (reader.Read())
                 {
-                    if (state == ReadingState.EmptyItem ||
-                        state == ReadingState.Item)
+                    if (reader.Position == ReaderPosition.EmptyItem ||
+                        reader.Position == ReaderPosition.Item)
                     {
                         itemNames.Add(reader.ItemName);
                     }
@@ -80,14 +78,13 @@ namespace Stratosphere.Table
         {
             using (IReader reader = table.Select(attributeNames, condition))
             {
-                ReadingState state;
                 T itemData = default(T);
                 string itemName = null;
 
-                while ((state = reader.Read()) != ReadingState.End)
+                while (reader.Read())
                 {
-                    if (state == ReadingState.EmptyItem ||
-                        state == ReadingState.Item)
+                    if (reader.Position == ReaderPosition.EmptyItem ||
+                        reader.Position == ReaderPosition.Item)
                     {
                         if (itemName != null)
                         {
@@ -97,7 +94,7 @@ namespace Stratosphere.Table
                             itemData = default(T);
                         }
 
-                        if (state == ReadingState.EmptyItem)
+                        if (reader.Position == ReaderPosition.EmptyItem)
                         {
                             yield return new KeyValuePair<string, T>(reader.ItemName, new T());
 

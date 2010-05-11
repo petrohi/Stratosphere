@@ -2,13 +2,13 @@
 
 namespace Stratosphere.Table
 {
-    public enum ReadingState
+    public enum ReaderPosition
     {
-        EmptyItem = 0,
+        None = 0,
+
+        EmptyItem,
         Item,
         Attribute,
-        Value,
-
-        End = -1
+        Value
     }
 }

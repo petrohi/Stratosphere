@@ -6,7 +6,8 @@ namespace Stratosphere.Table
 {
     public interface IReader : IDisposable
     {
-        ReadingState Read();
+        bool Read();
+        ReaderPosition Position { get; }
 
         string ItemName { get; }
         string AttributeName { get; }

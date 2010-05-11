@@ -258,6 +258,7 @@ namespace Stratosphere.Table.Sdb
         private class Reader : IReader
         {
             private readonly IEnumerable<XElement> _items;
+            private ReaderPosition _position;
 
             private IEnumerator<XElement> _itemEnumerator;
             private IEnumerator<IGrouping<string, XElement>> _attributeEnumerator;
@@ -320,7 +321,7 @@ namespace Stratosphere.Table.Sdb
                 return false;
             }
 
-            public ReadingState Read()
+            public bool Read()
             {
                 if (_itemEnumerator == null)
                 {
@@ -331,24 +332,27 @@ namespace Stratosphere.Table.Sdb
 
                 if (MoveNextValue())
                 {
-                    return ReadingState.Value;
+                    _position = ReaderPosition.Value;
                 }
                 else if (MoveNextAttribute())
                 {
-                    return ReadingState.Attribute;
+                    _position = ReaderPosition.Attribute;
                 }
                 else if (MoveNextItem(out isEmpty))
                 {
-                    if (isEmpty)
-                    {
-                        return ReadingState.EmptyItem;
-                    }
+                    _position = isEmpty ? ReaderPosition.EmptyItem : ReaderPosition.Item;
+                }
+                else
+                {
+                    _position = ReaderPosition.None;
 
-                    return ReadingState.Item;
+                    return false;
                 }
 
-                return ReadingState.End;
+                return true;
             }
+
+            public ReaderPosition Position { get { return _position; } }
 
             public string ItemName
             {
@@ -412,7 +416,7 @@ namespace Stratosphere.Table.Sdb
         {
             using (IReader reader = Select(new string[] { "count(*)" }, condition))
             {
-                if (reader.Read() != ReadingState.End &&
+                if (reader.Read() &&
                     reader.AttributeName == "Count")
                 {
                     return long.Parse(reader.AttributeValue);

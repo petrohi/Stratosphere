@@ -319,6 +319,7 @@ namespace Stratosphere.Table.FileSystem
             private int _parameterIndex;
             private string _lastItemName;
             private string _lastAttributeName;
+            private ReaderPosition _position;
 
             public Reader(IDbConnection connection, IEnumerable<string> attributeNames, Condition condition)
             {
@@ -327,7 +328,7 @@ namespace Stratosphere.Table.FileSystem
                 BuildCommand(_command, attributeNames, condition);
             }
 
-            public ReadingState Read()
+            public bool Read()
             {
                 if (_reader == null)
                 {
@@ -341,21 +342,27 @@ namespace Stratosphere.Table.FileSystem
                         _lastItemName = ItemName;
                         _lastAttributeName = AttributeName;
 
-                        return ReadingState.Item;
+                        _position = ReaderPosition.Item;
                     }
                     
                     if (_lastAttributeName != AttributeName)
                     {
                         _lastAttributeName = AttributeName;
 
-                        return ReadingState.Attribute;
+                        _position = ReaderPosition.Attribute;
                     }
 
-                    return ReadingState.Value;
+                    _position = ReaderPosition.Value;
+
+                    return true;
                 }
 
-                return ReadingState.End;
+                _position = ReaderPosition.None;
+
+                return false;
             }
+
+            public ReaderPosition Position { get { return _position; } }
 
             public string ItemName
             {
@@ -555,9 +562,9 @@ namespace Stratosphere.Table.FileSystem
 
             using (IReader reader = Select(new string[] { "itemName()" }, condition))
             {
-                while (reader.Read() != ReadingState.End)
+                while (reader.Read())
                 {
-                    count ++;
+                    count++;
                 }
             }
 

@@ -936,24 +936,23 @@ namespace Stratosphere.Command
 
         private static void WriteItems(IReader reader)
         {
-            ReadingState state;
             PrettyConsole console = new PrettyConsole();
             console.AddColumn("ItemName", 32);
             console.AddColumn("AttributeName", 32);
             console.AddColumn("AttributeValue", 32);
             console.WriteHeader();
 
-            while ((state = reader.Read()) != ReadingState.End)
+            while (reader.Read())
             {
-                if (state == ReadingState.EmptyItem)
+                if (reader.Position == ReaderPosition.EmptyItem)
                 {
                     console.WriteLine(reader.ItemName);
                 }
-                else if (state == ReadingState.Item)
+                else if (reader.Position == ReaderPosition.Item)
                 {
                     console.WriteLine(reader.ItemName, reader.AttributeName, reader.AttributeValue);
                 }
-                else if (state == ReadingState.Attribute)
+                else if (reader.Position == ReaderPosition.Attribute)
                 {
                     console.WriteLine(string.Empty, reader.AttributeName, reader.AttributeValue);
                 }
@@ -967,13 +966,12 @@ namespace Stratosphere.Command
         private static int WriteItems(long expectedCount, XmlWriter writer, IReader reader)
         {
             int count = 0;
-            ReadingState state;
             bool itemBegan = false;
 
-            while ((state = reader.Read()) != ReadingState.End)
+            while (reader.Read())
             {
-                if (state == ReadingState.EmptyItem ||
-                    state == ReadingState.Item)
+                if (reader.Position == ReaderPosition.EmptyItem ||
+                    reader.Position == ReaderPosition.Item)
                 {
                     if (itemBegan)
                     {
@@ -987,7 +985,7 @@ namespace Stratosphere.Command
                         itemBegan = true;
                     }
 
-                    if (state != ReadingState.EmptyItem)
+                    if (reader.Position != ReaderPosition.EmptyItem)
                     {
                         WriteAttribute(writer, reader);
                     }
