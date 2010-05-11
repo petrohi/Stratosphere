@@ -344,15 +344,16 @@ namespace Stratosphere.Table.FileSystem
 
                         _position = ReaderPosition.Item;
                     }
-                    
-                    if (_lastAttributeName != AttributeName)
+                    else if (_lastAttributeName != AttributeName)
                     {
                         _lastAttributeName = AttributeName;
 
                         _position = ReaderPosition.Attribute;
                     }
-
-                    _position = ReaderPosition.Value;
+                    else
+                    {
+                        _position = ReaderPosition.Value;
+                    }
 
                     return true;
                 }
