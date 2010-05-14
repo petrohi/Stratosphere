@@ -509,7 +509,7 @@ namespace Stratosphere.Table.Sdb
             throw new ArgumentException("Value test is not supported");
         }
 
-        private static string ContinueBuildWhereClause(AttributeCondition condition, bool everyAttribute)
+        private static string ContinueBuildAttributeConditionWhereClause(AttributeCondition condition, bool everyAttribute)
         {
             AttributeValueCondition valueCondition;
             AttributeIsNullCondition isNullCondition;
@@ -520,9 +520,9 @@ namespace Stratosphere.Table.Sdb
             if ((valueCondition = condition as AttributeValueCondition) != null)
             {
                 return string.Format("{0}{1}'{2}'", 
-                    GetConditionAttributeName(valueCondition.Pair.Key, everyAttribute),
+                    GetConditionAttributeName(valueCondition.Name, everyAttribute),
                     GetValueTestOperator(valueCondition.Test),
-                    EncodeConditionAttributeValue(valueCondition.Pair.Value));
+                    EncodeConditionAttributeValue(valueCondition.Value));
             }
             else if ((isNullCondition = condition as AttributeIsNullCondition) != null)
             {
@@ -572,7 +572,7 @@ namespace Stratosphere.Table.Sdb
             throw new ArgumentException("Condition is not supported");
         }
 
-        private static string ContinueBuildWhereClause(Condition condition)
+        private static string ContinueBuildConditionWhereClause(Condition condition)
         {
             ItemNameCondition itemNameCondition;
             AttributeCondition attributeCondition;
@@ -585,11 +585,11 @@ namespace Stratosphere.Table.Sdb
             }
             else if ((attributeCondition = condition as AttributeCondition) != null)
             {
-                return ContinueBuildWhereClause(attributeCondition, false);
+                return ContinueBuildAttributeConditionWhereClause(attributeCondition, false);
             }
             else if ((everyAttributeCondition = condition as EveryAttributeCondition) != null)
             {
-                return ContinueBuildWhereClause(everyAttributeCondition.Condition, true);
+                return ContinueBuildAttributeConditionWhereClause(everyAttributeCondition.Condition, true);
             }
             else if ((groupCondition = condition as GroupCondition) != null)
             {
@@ -603,7 +603,7 @@ namespace Stratosphere.Table.Sdb
 
                     foreach (Condition inner in groupCondition.Group)
                     {
-                        string innerExpression = ContinueBuildWhereClause(inner);
+                        string innerExpression = ContinueBuildConditionWhereClause(inner);
 
                         if (!string.IsNullOrEmpty(innerExpression))
                         {
@@ -648,7 +648,7 @@ namespace Stratosphere.Table.Sdb
         {
             if (condition != null)
             {
-                string expression = ContinueBuildWhereClause(condition);
+                string expression = ContinueBuildConditionWhereClause(condition);
 
                 if (!string.IsNullOrEmpty(expression))
                 {

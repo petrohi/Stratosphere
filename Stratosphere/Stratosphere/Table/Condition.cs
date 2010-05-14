@@ -19,9 +19,9 @@ namespace Stratosphere.Table
     public abstract class Condition
     {
         public static Condition WithItemName(string itemName) { return new ItemNameCondition(itemName); }
-        public static Condition WithAttributeValue(string name, ValueTest test, string value) { return new AttributeValueCondition(new KeyValuePair<string, string>(name, value), test); }
-        public static Condition WithAttributeValue(string name, string value) { return new AttributeValueCondition(new KeyValuePair<string, string>(name, value), ValueTest.Equal); }
-        public static Condition WithAttributeValue(KeyValuePair<string, string> pair) { return new AttributeValueCondition(pair, ValueTest.Equal); }
+        public static Condition WithAttributeValue(string name, ValueTest test, string value) { return new AttributeValueCondition(name, value, test); }
+        public static Condition WithAttributeValue(string name, string value) { return new AttributeValueCondition(name, value, ValueTest.Equal); }
+        public static Condition WithAttributeValue(KeyValuePair<string, string> pair) { return new AttributeValueCondition(pair.Key, pair.Value, ValueTest.Equal); }
         public static Condition WithAttributeBetween(string name, string lowerValue, string upperValue) { return new AttributeValueBetweenCondition(name, lowerValue, upperValue); }
         public static Condition WithAttributeIn(string name, IEnumerable<string> values) { return new AttributeValueInCondition(name, values); }
         public static Condition WithAttributeIsNull(string key) { return new AttributeIsNullCondition(key); }
@@ -85,61 +85,58 @@ namespace Stratosphere.Table
         private readonly AttributeCondition _condition;
     }
 
-    public abstract class AttributeCondition : Condition { }
+    public abstract class AttributeCondition : Condition
+    {
+        private readonly string _name;
+
+        public AttributeCondition(string name)
+        {
+            _name = name;
+        }
+
+        public string Name { get { return _name; } }
+    }
 
     public sealed class AttributeValueCondition : AttributeCondition
     {
-        public AttributeValueCondition(KeyValuePair<string, string> pair, ValueTest test)
+        public AttributeValueCondition(string name, string value, ValueTest test)
+            : base(name)
         {
-            _pair = pair;
+            _value = value;
             _test = test;
         }
 
-        public KeyValuePair<string, string> Pair { get { return _pair; } }
+        public string Value { get { return _value; } }
         public ValueTest Test { get { return _test; } }
 
-        private readonly KeyValuePair<string, string> _pair;
+        private readonly string _value;
         private readonly ValueTest _test;
     }
 
     public sealed class AttributeIsNullCondition : AttributeCondition
     {
         public AttributeIsNullCondition(string name)
-        {
-            _name = name;
-        }
-
-        public string Name { get { return _name; } }
-
-        private readonly string _name;
+            : base(name) { }
     }
 
     public sealed class AttributeIsNotNullCondition : AttributeCondition
     {
         public AttributeIsNotNullCondition(string name)
-        {
-            _name = name;
-        }
-
-        public string Name { get { return _name; } }
-
-        private readonly string _name;
+            : base(name) { }
     }
 
     public sealed class AttributeValueBetweenCondition : AttributeCondition
     {
         public AttributeValueBetweenCondition(string name, string lowerValue, string upperValue)
+            : base(name)
         {
-            _name = name;
             _lowerValue = lowerValue;
             _upperValue = upperValue;
         }
 
-        public string Name { get { return _name; } }
         public string LowerValue { get { return _lowerValue; } }
         public string UpperValue { get { return _upperValue; } }
 
-        private readonly string _name;
         private readonly string _lowerValue;
         private readonly string _upperValue;
     }
@@ -147,15 +144,13 @@ namespace Stratosphere.Table
     public sealed class AttributeValueInCondition : AttributeCondition
     {
         public AttributeValueInCondition(string name, IEnumerable<string> values)
+            : base(name)
         {
-            _name = name;
             _values = values;
         }
 
-        public string Name { get { return _name; } }
         public IEnumerable<string> Values { get { return _values; } }
 
-        private readonly string _name;
         private readonly IEnumerable<string> _values;
     }
 

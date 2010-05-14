@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Stratosphere.Table.FileSystem
@@ -340,9 +341,19 @@ namespace Stratosphere.Table.FileSystem
                     if (_lastItemName != ItemName)
                     {
                         _lastItemName = ItemName;
-                        _lastAttributeName = AttributeName;
 
-                        _position = ReaderPosition.Item;
+                        if (_reader.IsDBNull(1))
+                        {
+                            _lastAttributeName = null;
+
+                            _position = ReaderPosition.EmptyItem;
+                        }
+                        else
+                        {
+                            _lastAttributeName = AttributeName;
+
+                            _position = ReaderPosition.Item;
+                        }
                     }
                     else if (_lastAttributeName != AttributeName)
                     {
@@ -382,7 +393,7 @@ namespace Stratosphere.Table.FileSystem
             {
                 get
                 {
-                    if (_reader != null)
+                    if (_reader != null && !_reader.IsDBNull(1))
                     {
                         return _reader.GetString(1);
                     }
@@ -395,7 +406,7 @@ namespace Stratosphere.Table.FileSystem
             {
                 get
                 {
-                    if (_reader != null)
+                    if (_reader != null && !_reader.IsDBNull(2))
                     {
                         return _reader.GetString(2);
                     }
@@ -417,8 +428,8 @@ namespace Stratosphere.Table.FileSystem
 
             private void BuildCommand(IDbCommand command, IEnumerable<string> attributeNames, Condition condition)
             {
-                StringBuilder builder = new StringBuilder("select i.name, a.name, a.value from item i join attribute a on i.num=a.inum");
-                builder.Append(BuildWhereClause(command, condition));
+                StringBuilder builder = new StringBuilder("select i.name, a.name, a.value from item i left join attribute a on i.num=a.inum");
+                builder.Append(BuildWhereClause(command, attributeNames, condition));
                 builder.Append(" order by i.name, a.name");
 
                 command.CommandText = builder.ToString();
@@ -431,12 +442,146 @@ namespace Stratosphere.Table.FileSystem
                 return name;
             }
 
-            private string ContinueBuildWhereClause(IDbCommand command, Condition condition)
+            private static string GetValueTestOperator(ValueTest test)
+            {
+                switch (test)
+                {
+                    case ValueTest.Equal:
+                        return "=";
+
+                    case ValueTest.NotEqual:
+                        return "!=";
+
+                    case ValueTest.LessThan:
+                        return "<";
+
+                    case ValueTest.GreaterThan:
+                        return ">";
+
+                    case ValueTest.LessOrEqual:
+                        return "<=";
+
+                    case ValueTest.GreaterOrEqual:
+                        return ">=";
+
+                    case ValueTest.Like:
+                        return " like ";
+
+                    case ValueTest.NotLike:
+                        return " not like ";
+                }
+
+                throw new ArgumentException("Value test is not supported");
+            }
+
+            private string ContinueBuildAttributeConditionWhereClause(IDbCommand command, AttributeCondition condition, bool everyAttribute)
+            {
+                AttributeValueCondition valueCondition;
+                AttributeIsNullCondition isNullCondition;
+                AttributeIsNotNullCondition isNotNullCondition;
+                AttributeValueBetweenCondition valueBetweenCondition;
+                AttributeValueInCondition valueInCondition;
+
+                string nameParameterName = FormatParameterName("@aname{0}");
+                AddParameter(command, nameParameterName, condition.Name);
+
+                if ((valueCondition = condition as AttributeValueCondition) != null && valueCondition.Test == ValueTest.Equal)
+                {
+                    string valueParameterName = FormatParameterName("@avalue{0}");
+                    AddParameter(command, valueParameterName, valueCondition.Value);
+
+                    return string.Format("i.num in (select a.inum from attribute a where a.name={0} and a.value{1}{2})",
+                        nameParameterName, GetValueTestOperator(valueCondition.Test), valueParameterName);
+                }
+                else if ((isNullCondition = condition as AttributeIsNullCondition) != null)
+                {
+                    return string.Format("i.num not in (select a.inum from attribute a where a.name={0})",
+                        nameParameterName);
+                }
+                else if ((isNotNullCondition = condition as AttributeIsNotNullCondition) != null)
+                {
+                    return string.Format("i.num in (select a.inum from attribute a where a.name={0})",
+                        nameParameterName);
+                }
+                else if ((valueBetweenCondition = condition as AttributeValueBetweenCondition) != null)
+                {
+                    string lowerValueParameterName = FormatParameterName("@avalue{0}");
+                    string upperValueParameterName = FormatParameterName("@avalue{0}");
+
+                    AddParameter(command, lowerValueParameterName, valueBetweenCondition.LowerValue);
+                    AddParameter(command, upperValueParameterName, valueBetweenCondition.UpperValue);
+
+                    return string.Format("i.num in (select a.inum from attribute a where a.name={0} and a.value between {1} and {2})",
+                        nameParameterName, lowerValueParameterName, upperValueParameterName);
+                }
+                else if ((valueInCondition = condition as AttributeValueInCondition) != null)
+                {
+                    StringBuilder builder = new StringBuilder();
+                    builder.AppendFormat("i.num in (select a.inum from attribute a where a.name={0} and a.value in(", nameParameterName);
+
+                    bool isFirst = true;
+
+                    foreach (string value in valueInCondition.Values)
+                    {
+                        if (isFirst)
+                        {
+                            isFirst = false;
+                        }
+                        else
+                        {
+                            builder.Append(",");
+                        }
+
+                        string valueParameterName = FormatParameterName("@avalue{0}");
+                        AddParameter(command, valueParameterName, value);
+
+                        builder.AppendFormat(valueParameterName);
+                    }
+
+                    if (isFirst)
+                    {
+                        throw new ArgumentException("Value in condition values are empty");
+                    }
+
+                    builder.Append(")");
+                    return builder.ToString();
+                }
+
+                throw new ArgumentException("Condition is not supported");
+            }
+
+            private string ContinueBuildSelectionWhereClause(IDbCommand command, IEnumerable<string> attributeNames)
+            {
+                string[] attributeNamesArray = attributeNames.ToArray();
+
+                if (attributeNamesArray.Length != 0)
+                {
+                    StringBuilder builder = new StringBuilder("a.name in (");
+
+                    for (int i = 0; i < attributeNamesArray.Length; i++)
+                    {
+                        if (i != 0)
+                        {
+                            builder.Append(",");
+                        }
+
+                        string parameterName = FormatParameterName("@aname{0}");
+                        AddParameter(command, parameterName, attributeNamesArray[i]);
+
+                        builder.AppendFormat(parameterName);
+                    }
+
+                    return builder.ToString();
+                }
+
+                return string.Empty;
+            }
+
+            private string ContinueBuildConditionWhereClause(IDbCommand command, Condition condition)
             {
                 ItemNameCondition identityCondition;
-                AttributeValueCondition valueCondition;
-                AttributeIsNullCondition keyIsNullCondition;
-                AttributeIsNotNullCondition keyIsNotNullCondition;
+                AttributeCondition attributeCondition;
+                EveryAttributeCondition everyAttributeCondition;
                 GroupCondition groupCondition;
 
                 if ((identityCondition = condition as ItemNameCondition) != null)
@@ -446,32 +591,13 @@ namespace Stratosphere.Table.FileSystem
 
                     return string.Format("i.name={0}", parameterName);
                 }
-                else if ((valueCondition = condition as AttributeValueCondition) != null && valueCondition.Test == ValueTest.Equal)
+                else if ((attributeCondition = condition as AttributeCondition) != null)
                 {
-                    string nameParameterName = FormatParameterName("@aname{0}");
-                    string valueParameterName = FormatParameterName("@avalue{0}");
-
-                    AddParameter(command, nameParameterName, valueCondition.Pair.Key);
-                    AddParameter(command, valueParameterName, valueCondition.Pair.Value);
-
-                    return string.Format("i.num in (select a.inum from attribute a where a.name={0} and a.value={1})",
-                        nameParameterName, valueParameterName);
+                    return ContinueBuildAttributeConditionWhereClause(command, attributeCondition, false);
                 }
-                else if ((keyIsNullCondition = condition as AttributeIsNullCondition) != null)
+                else if ((everyAttributeCondition = condition as EveryAttributeCondition) != null)
                 {
-                    string parameterName = FormatParameterName("@aname{0}");
-                    AddParameter(command, parameterName, keyIsNullCondition.Name);
-
-                    return string.Format("i.num not in (select a.inum from attribute a where a.name={0})",
-                        parameterName);
-                }
-                else if ((keyIsNotNullCondition = condition as AttributeIsNotNullCondition) != null)
-                {
-                    string parameterName = FormatParameterName("@aname{0}");
-                    AddParameter(command, parameterName, keyIsNotNullCondition.Name);
-
-                    return string.Format("i.num in (select a.inum from attribute a where a.name={0})",
-                        parameterName);
+                    return ContinueBuildAttributeConditionWhereClause(command, everyAttributeCondition.Condition, true);
                 }
                 else if ((groupCondition = condition as GroupCondition) != null)
                 {
@@ -485,7 +611,7 @@ namespace Stratosphere.Table.FileSystem
 
                         foreach (Condition inner in groupCondition.Group)
                         {
-                            string innerExpression = ContinueBuildWhereClause(command, inner);
+                            string innerExpression = ContinueBuildConditionWhereClause(command, inner);
 
                             if (!string.IsNullOrEmpty(innerExpression))
                             {
@@ -526,21 +652,41 @@ namespace Stratosphere.Table.FileSystem
                 throw new ArgumentException("Condition is not supported");
             }
 
-            private string BuildWhereClause(IDbCommand command, Condition condition)
+            private string BuildWhereClause(IDbCommand command, IEnumerable<string> attributeNames, Condition condition)
             {
+                string conditionExpression = null;
+                string selectionExpression = null;
+
                 if (condition != null)
                 {
-                    string expression = ContinueBuildWhereClause(command, condition);
+                    conditionExpression = ContinueBuildConditionWhereClause(command, condition);
+                }
 
-                    if (!string.IsNullOrEmpty(expression))
+                if (attributeNames != null)
+                {
+                    selectionExpression = ContinueBuildSelectionWhereClause(command, attributeNames);
+                }
+
+                StringBuilder builder = new StringBuilder(" where (select count(*) from attribute a where a.inum=i.num) != 0");
+
+                if (!string.IsNullOrEmpty(conditionExpression) || !string.IsNullOrEmpty(selectionExpression))
+                {
+                    if (!string.IsNullOrEmpty(conditionExpression))
                     {
-                        StringBuilder builder = new StringBuilder(" where ");
-                        builder.Append(expression);
-                        return builder.ToString();
+                        builder.Append(" and (");
+                        builder.Append(conditionExpression);
+                        builder.Append(")");
+                    }
+
+                    if (!string.IsNullOrEmpty(selectionExpression))
+                    {
+                        builder.Append(" and (");
+                        builder.Append(selectionExpression);
+                        builder.Append(")");
                     }
                 }
 
-                return string.Empty;
+                return builder.ToString();
             }
 
             private static void AddParameter<T>(IDbCommand command, string name, T value)
