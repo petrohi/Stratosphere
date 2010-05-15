@@ -117,18 +117,28 @@ namespace Stratosphere.Table
             };
         }
 
+        public static IEnumerable<KeyValuePair<string, string>> Select(this ITable table, string attributeName)
+        {
+            return Select(table, attributeName, null);
+        }
+
         public static IEnumerable<KeyValuePair<string, string>> Select(this ITable table, string attributeName, Condition condition)
         {
             using (IReader reader = table.Select(new string[] { attributeName }, condition))
             {
                 while (reader.Read())
                 {
-                    if (reader.Position == ReaderPosition.Item)
+                    if (reader.Position != ReaderPosition.EmptyItem)
                     {
                         yield return new KeyValuePair<string, string>(reader.ItemName, reader.AttributeValue);
                     }
                 }
             }
+        }
+
+        public static IEnumerable<string> Select(this ITable table)
+        {
+            return Select(table, (Condition)null);
         }
 
         public static IEnumerable<string> Select(this ITable table, Condition condition)
