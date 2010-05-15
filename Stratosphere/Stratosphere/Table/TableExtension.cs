@@ -9,21 +9,12 @@ namespace Stratosphere.Table
     {
         public static void Erase(this ITable table)
         {
-            List<string> itemNames = new List<string>();
+            string[] itemNames = table.Select().ToArray();
 
-            using (IReader reader = table.Select(new string[] { "itemName()" }, null))
+            foreach (string itemName in itemNames)
             {
-                while (reader.Read())
-                {
-                    if (reader.Position == ReaderPosition.EmptyItem ||
-                        reader.Position == ReaderPosition.Item)
-                    {
-                        itemNames.Add(reader.ItemName);
-                    }
-                }
+                table.Delete(itemName, w => w.DeleteItem());
             }
-
-            itemNames.ForEach(n => table.Delete(n, w => w.DeleteItem()));
         }
 
         public static void Set<T>(this ITable table, string itemName, T itemData)
