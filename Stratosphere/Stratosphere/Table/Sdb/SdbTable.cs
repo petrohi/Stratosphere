@@ -230,7 +230,7 @@ namespace Stratosphere.Table.Sdb
                     action(builder);
                 }
 
-                _service.Execute(builder);
+                _service.ExecuteWithExpectation(builder);
             }
         }
 
@@ -245,7 +245,7 @@ namespace Stratosphere.Table.Sdb
                     action(builder);
                 }
 
-                _service.Execute(builder);
+                _service.ExecuteWithExpectation(builder);
             }
         }
 

@@ -22,6 +22,24 @@ namespace Stratosphere.Table.Sdb
 
         protected override string Version { get { return Version20090415; } }
 
+        public XElement ExecuteWithExpectation(IEnumerable<KeyValuePair<string, string>> parameters)
+        {
+            try
+            {
+                return Execute(parameters);
+            }
+            catch (AmazonException e)
+            {
+                if (e.Code == ConditionalCheckFailedCode ||
+                    e.Code == AttributeDoesNotExistCode)
+                {
+                    throw new ExpectationException(e);
+                }
+
+                throw;
+            }
+        }
+
         public XElement Execute(IEnumerable<KeyValuePair<string, string>> parameters)
         {
             XElement response = Execute(parameters, new Uri("http://sdb.amazonaws.com/"));
@@ -36,6 +54,8 @@ namespace Stratosphere.Table.Sdb
         }
 
         private const string Version20090415 = "2009-04-15";
+        private const string ConditionalCheckFailedCode = "ConditionalCheckFailed";
+        private const string AttributeDoesNotExistCode = "AttributeDoesNotExist";
 
         private static readonly XNamespace Sdb = XNamespace.Get("http://sdb.amazonaws.com/doc/2009-04-15/");
     }
