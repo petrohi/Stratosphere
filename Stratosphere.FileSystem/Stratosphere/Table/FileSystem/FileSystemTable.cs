@@ -467,9 +467,22 @@ namespace Stratosphere.Table.FileSystem
             {
                 StringBuilder builder = new StringBuilder("select ");
 
-                string[] attributeNamesArray = attributeNames == null ? new string[] { } : attributeNames.ToArray();
-                bool isSelectCount = attributeNamesArray.Length == 1 && attributeNamesArray[0] == TableExtension.CountAttribute;
-                bool isSelectItemName = attributeNamesArray.Length == 1 && attributeNamesArray[0] == TableExtension.ItemNameAttribute;
+                string[] attributeNamesArray = (attributeNames == null ? new string[] { } : attributeNames.Distinct().ToArray());
+
+                bool isSelectCount = false;
+                bool isSelectItemName = false;
+
+                if (attributeNamesArray.Length == 1)
+                {
+                    if (attributeNamesArray[0] == TableExtension.CountAttribute)
+                    {
+                        isSelectCount = true;
+                    }
+                    else if (attributeNamesArray[0] == TableExtension.ItemNameAttribute)
+                    {
+                        isSelectItemName = true;
+                    }
+                }
 
                 if (isSelectCount)
                 {
@@ -638,42 +651,37 @@ namespace Stratosphere.Table.FileSystem
 
             private string ContinueBuildSelectionWhereClause(IDbCommand command, string[] attributeNames)
             {
-                if (attributeNames.Length != 0)
+                StringBuilder builder = new StringBuilder("a.name in (");
+
+                for (int i = 0; i < attributeNames.Length; i++)
                 {
-                    StringBuilder builder = new StringBuilder("a.name in (");
-
-                    for (int i = 0; i < attributeNames.Length; i++)
+                    if (i != 0)
                     {
-                        if (i != 0)
-                        {
-                            builder.Append(",");
-                        }
-
-                        string parameterName = FormatParameterName("@aname{0}");
-                        AddParameter(command, parameterName, attributeNames[i]);
-
-                        builder.AppendFormat(parameterName);
+                        builder.Append(",");
                     }
 
-                    builder.Append(")");
+                    string parameterName = FormatParameterName("@aname{0}");
+                    AddParameter(command, parameterName, attributeNames[i]);
 
-                    return builder.ToString();
+                    builder.AppendFormat(parameterName);
                 }
 
-                return string.Empty;
+                builder.Append(")");
+
+                return builder.ToString();
             }
 
             private string ContinueBuildConditionWhereClause(IDbCommand command, Condition condition)
             {
-                ItemNameCondition identityCondition;
+                ItemNameCondition itemNameCondition;
                 AttributeCondition attributeCondition;
                 EveryAttributeCondition everyAttributeCondition;
                 GroupCondition groupCondition;
 
-                if ((identityCondition = condition as ItemNameCondition) != null)
+                if ((itemNameCondition = condition as ItemNameCondition) != null)
                 {
                     string parameterName = FormatParameterName("@iname{0}");
-                    AddParameter(command, parameterName, identityCondition.ItemName.ToString());
+                    AddParameter(command, parameterName, itemNameCondition.ItemName);
 
                     return string.Format("i.name={0}", parameterName);
                 }

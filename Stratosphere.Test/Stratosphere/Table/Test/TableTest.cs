@@ -200,14 +200,14 @@ namespace Stratosphere.Table.Test
         {
             ITable t = _table;
 
-            var es = t.Get<Element>().ToDictionary(p => p.Key, p => p.Value);
+            var es = t.Get<Element>();
             AssertIdentities(es);
 
             t.Set("e0", new Element());
             t.Set("e1", new Element());
             t.Set("e2", new Element());
 
-            es = t.Get<Element>().ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>();
 
             AssertIdentities(es);
 
@@ -215,7 +215,7 @@ namespace Stratosphere.Table.Test
             t.Set("e1", new Element(Pairs(Pair("Y", "B"), Pair("YY", "BB"), Pair("YYY", "BBB"))));
             t.Set("e2", new Element(Pairs(Pair("Z", "C"), Pair("ZZ", "CC"), Pair("ZZZ", "CCC"))));
 
-            es = t.Get<Element>().ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>();
 
             AssertIdentities(es, "e0", "e1", "e2");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA"));
@@ -226,7 +226,7 @@ namespace Stratosphere.Table.Test
             t.Set("e1", new Element(Pairs(Pair("YY", "BB1"), Pair("YYY", "BBB1"), Pair("YYYY", string.Empty))));
             t.Set("e2", new Element(Pairs(Pair("Z", string.Empty), Pair("ZZZ", "CCC1"))));
 
-            es = t.Get<Element>().ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>();
 
             AssertIdentities(es, "e0", "e1", "e2");
             AssertPairs(es, "e0", Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"), Pair("XXXX", "AAAA"));
@@ -237,7 +237,7 @@ namespace Stratosphere.Table.Test
             t.Set("e1", new Element(Pairs(Pair("YYYY", "BBBB"), Pair("YYY", "BBB2"))));
             t.Set("e2", new Element(Pairs(Pair("ZZ", string.Empty), Pair("ZZZ", null))));
 
-            es = t.Get<Element>().ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>();
 
             AssertIdentities(es, "e0", "e1");
             AssertPairs(es, "e0", Pair("X", "A2"), Pair("XX", "AA"), Pair("XXX", "AAA"), Pair("XXXX", "AAAA1"));
@@ -246,14 +246,14 @@ namespace Stratosphere.Table.Test
             t.Set("e0", new Element(Pairs(Pair("X", string.Empty), Pair("XX", string.Empty), Pair("XXX", string.Empty), Pair("XXXX", string.Empty))));
             t.Set("e1", new Element(Pairs(Pair("Y", null), Pair("YY", null), Pair("YYY", null))));
 
-            es = t.Get<Element>().ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>();
 
             AssertIdentities(es, "e1");
             AssertPairs(es, "e1", Pair("YYYY", "BBBB"));
 
             t.Set("e1", new Element(Pairs(Pair("YYYY", null))));
 
-            es = t.Get<Element>().ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>();
 
             AssertIdentities(es);
         }
@@ -285,21 +285,21 @@ namespace Stratosphere.Table.Test
         {
             ITable t = _table;
 
-            var es = t.Get<Element>(Condition.WithItemName("e0")).ToDictionary(p => p.Key, p => p.Value);
+            var es = t.Get<Element>(Condition.WithItemName("e0"));
             AssertIdentities(es);
 
-            es = t.Get<Element>(Condition.WithItemName("e1")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithItemName("e1"));
             AssertIdentities(es);
 
             t.Set("e0", new Element(Pairs(Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"))));
             t.Set("e1", new Element(Pairs(Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"))));
             t.Set("e2", new Element(Pairs(Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"))));
 
-            es = t.Get<Element>(Condition.WithItemName("e0")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithItemName("e0"));
             AssertIdentities(es, "e0");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"));
 
-            es = t.Get<Element>(Condition.WithItemName("e1")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithItemName("e1"));
             AssertIdentities(es, "e1");
             AssertPairs(es, "e1", Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"));
         }
@@ -309,21 +309,21 @@ namespace Stratosphere.Table.Test
         {
             ITable t = _table;
 
-            var es = t.Get<Element>(new string[] { TableExtension.ItemNameAttribute }, Condition.WithItemName("e0")).ToDictionary(p => p.Key, p => p.Value);
+            var es = t.Get<Element>(new string[] { TableExtension.ItemNameAttribute }, Condition.WithItemName("e0"));
             AssertIdentities(es);
 
-            es = t.Get<Element>(new string[] { TableExtension.ItemNameAttribute }, Condition.WithItemName("e1")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(new string[] { TableExtension.ItemNameAttribute }, Condition.WithItemName("e1"));
             AssertIdentities(es);
 
             t.Set("e0", new Element(Pairs(Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"))));
             t.Set("e1", new Element(Pairs(Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"))));
             t.Set("e2", new Element(Pairs(Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"))));
 
-            es = t.Get<Element>(new string[] { TableExtension.ItemNameAttribute }, Condition.WithItemName("e0")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(new string[] { TableExtension.ItemNameAttribute }, Condition.WithItemName("e0"));
             AssertIdentities(es, "e0");
             AssertPairs(es, "e0");
 
-            es = t.Get<Element>(new string[] { TableExtension.ItemNameAttribute }, Condition.WithItemName("e1")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(new string[] { TableExtension.ItemNameAttribute }, Condition.WithItemName("e1"));
             AssertIdentities(es, "e1");
             AssertPairs(es, "e1");
         }
@@ -333,29 +333,29 @@ namespace Stratosphere.Table.Test
         {
             ITable t = _table;
 
-            var es = t.Get<Element>(new string[] { "X" }, Condition.WithItemName("e0")).ToDictionary(p => p.Key, p => p.Value);
+            var es = t.Get<Element>(new string[] { "X" }, Condition.WithItemName("e0"));
             AssertIdentities(es);
 
-            es = t.Get<Element>(new string[] { "X", "XX" }, Condition.WithItemName("e1")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(new string[] { "X", "XX" }, Condition.WithItemName("e1"));
             AssertIdentities(es);
 
             t.Set("e0", new Element(Pairs(Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"))));
             t.Set("e1", new Element(Pairs(Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"))));
             t.Set("e2", new Element(Pairs(Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"))));
 
-            es = t.Get<Element>(new string[] { "X" }, Condition.WithItemName("e0")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(new string[] { "X" }, Condition.WithItemName("e0"));
             AssertIdentities(es, "e0");
             AssertPairs(es, "e0", Pair("X", "A"));
 
-            es = t.Get<Element>(new string[] { "X", "XX" }, Condition.WithItemName("e0")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(new string[] { "X", "XX" }, Condition.WithItemName("e0"));
             AssertIdentities(es, "e0");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XX", "AA"));
 
-            es = t.Get<Element>(new string[] { "X" }, Condition.WithItemName("e1")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(new string[] { "X" }, Condition.WithItemName("e1"));
             AssertIdentities(es, "e1");
             AssertPairs(es, "e1", Pair("X", "A"));
 
-            es = t.Get<Element>(new string[] { "X", "XX" }, Condition.WithItemName("e1")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(new string[] { "X", "XX" }, Condition.WithItemName("e1"));
             AssertIdentities(es, "e1");
             AssertPairs(es, "e1", Pair("X", "A"), Pair("XX", "AA1"));
         }
@@ -365,24 +365,24 @@ namespace Stratosphere.Table.Test
         {
             ITable t = _table;
 
-            var es = t.Get<Element>(Condition.WithAttributeBetween("X", "A", "B")).ToDictionary(p => p.Key, p => p.Value);
-            Assert.Equal(0, es.Count);
+            var es = t.Get<Element>(Condition.WithAttributeBetween("X", "A", "B"));
+            AssertIdentities(es);
 
-            es = t.Get<Element>(Condition.WithAttributeBetween("X", "A", "C")).ToDictionary(p => p.Key, p => p.Value);
-            Assert.Equal(0, es.Count);
+            es = t.Get<Element>(Condition.WithAttributeBetween("X", "A", "C"));
+            AssertIdentities(es);
 
             t.Set("e0", new Element(Pairs(Pair("X", "A"))));
             t.Set("e1", new Element(Pairs(Pair("X", "B"))));
             t.Set("e2", new Element(Pairs(Pair("X", "C"))));
             t.Set("e3", new Element(Pairs(Pair("X", "D"))));
 
-            es = t.Get<Element>(Condition.WithAttributeBetween("X", "A", "B")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeBetween("X", "A", "B"));
             AssertIdentities(es, "e0", "e1");
 
-            es = t.Get<Element>(Condition.WithAttributeBetween("X", "A", "C")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeBetween("X", "A", "C"));
             AssertIdentities(es, "e0", "e1", "e2");
 
-            es = t.Get<Element>(Condition.WithAttributeBetween("X", "B", "C")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeBetween("X", "B", "C"));
             AssertIdentities(es, "e1", "e2");
         }
 
@@ -391,27 +391,27 @@ namespace Stratosphere.Table.Test
         {
             ITable t = _table;
 
-            var es = t.Get<Element>(Condition.WithAttributeIn("X", new string[] { "A", "B" })).ToDictionary(p => p.Key, p => p.Value);
-            Assert.Equal(0, es.Count);
+            var es = t.Get<Element>(Condition.WithAttributeIn("X", new string[] { "A", "B" }));
+            AssertIdentities(es);
 
-            es = t.Get<Element>(Condition.WithAttributeIn("X", new string[] { "A", "C" })).ToDictionary(p => p.Key, p => p.Value);
-            Assert.Equal(0, es.Count);
+            es = t.Get<Element>(Condition.WithAttributeIn("X", new string[] { "A", "C" }));
+            AssertIdentities(es);
 
             t.Set("e0", new Element(Pairs(Pair("X", "A"))));
             t.Set("e1", new Element(Pairs(Pair("X", "B"))));
             t.Set("e2", new Element(Pairs(Pair("X", "C"))));
             t.Set("e3", new Element(Pairs(Pair("X", "D"))));
 
-            es = t.Get<Element>(Condition.WithAttributeIn("X", new string[] { "A", "B" })).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeIn("X", new string[] { "A", "B" }));
             AssertIdentities(es, "e0", "e1");
 
-            es = t.Get<Element>(Condition.WithAttributeIn("X", new string[] { "C", "B" })).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeIn("X", new string[] { "C", "B" }));
             AssertIdentities(es, "e1", "e2");
 
-            es = t.Get<Element>(Condition.WithAttributeIn("X", new string[] { "A", "C" })).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeIn("X", new string[] { "A", "C" }));
             AssertIdentities(es, "e0", "e2");
 
-            es = t.Get<Element>(Condition.WithAttributeIn("X", new string[] { "A", "C", "B" })).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeIn("X", new string[] { "A", "C", "B" }));
             AssertIdentities(es, "e0", "e1", "e2");
 
             Assert.Throws<ArgumentException>(() => t.Get<Element>(Condition.WithAttributeIn("X", new string[] { })).ToArray());
@@ -422,119 +422,119 @@ namespace Stratosphere.Table.Test
         {
             ITable t = _table;
 
-            var es = t.Get<Element>(Condition.WithAttributeValue(Pair("X", "A"))).ToDictionary(p => p.Key, p => p.Value);
-            Assert.Equal(0, es.Count);
+            var es = t.Get<Element>(Condition.WithAttributeValue(Pair("X", "A")));
+            AssertIdentities(es);
 
-            es = t.Get<Element>(Condition.WithAttributeValue(Pair("XX", "AA"))).ToDictionary(p => p.Key, p => p.Value);
-            Assert.Equal(0, es.Count);
+            es = t.Get<Element>(Condition.WithAttributeValue(Pair("XX", "AA")));
+            AssertIdentities(es);
 
             t.Set("e0", new Element(Pairs(Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"))));
             t.Set("e1", new Element(Pairs(Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"))));
             t.Set("e2", new Element(Pairs(Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"))));
 
-            es = t.Get<Element>(Condition.WithAttributeValue(Pair("X", "A"))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeValue(Pair("X", "A")));
             AssertIdentities(es, "e0", "e1");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"));
             AssertPairs(es, "e1", Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.WithAttributeValue("X", ValueTest.LessOrEqual, "A")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeValue("X", ValueTest.LessOrEqual, "A"));
             AssertIdentities(es, "e0", "e1");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"));
             AssertPairs(es, "e1", Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.WithAttributeValue("X", ValueTest.GreaterThan, "A")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeValue("X", ValueTest.GreaterThan, "A"));
             AssertIdentities(es, "e2");
             AssertPairs(es, "e2", Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.WithAttributeValue("X", ValueTest.NotEqual, "A")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeValue("X", ValueTest.NotEqual, "A"));
             AssertIdentities(es, "e2");
             AssertPairs(es, "e2", Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.WithAttributeValue(Pair("XX", "AA"))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeValue(Pair("XX", "AA")));
             AssertIdentities(es, "e0", "e2");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"));
             AssertPairs(es, "e2", Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.WithAttributeValue("XX", ValueTest.LessOrEqual, "AA")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeValue("XX", ValueTest.LessOrEqual, "AA"));
             AssertIdentities(es, "e0", "e2");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"));
             AssertPairs(es, "e2", Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.WithAttributeValue("XX", ValueTest.GreaterThan, "AA")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeValue("XX", ValueTest.GreaterThan, "AA"));
             AssertIdentities(es, "e1");
             AssertPairs(es, "e1", Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.WithAttributeValue("XX", ValueTest.NotEqual, "AA")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeValue("XX", ValueTest.NotEqual, "AA"));
             AssertIdentities(es, "e1");
             AssertPairs(es, "e1", Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.WithAttributeValue(Pair("XXX", "AAA"))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeValue(Pair("XXX", "AAA")));
             AssertIdentities(es, "e1", "e2");
             AssertPairs(es, "e1", Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"));
             AssertPairs(es, "e2", Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.WithAttributeValue("XXX", ValueTest.LessOrEqual, "AAA")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeValue("XXX", ValueTest.LessOrEqual, "AAA"));
             AssertIdentities(es, "e1", "e2");
             AssertPairs(es, "e1", Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"));
             AssertPairs(es, "e2", Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.WithAttributeValue("XXX", ValueTest.GreaterThan, "AAA")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeValue("XXX", ValueTest.GreaterThan, "AAA"));
             AssertIdentities(es, "e0");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"));
 
-            es = t.Get<Element>(Condition.WithAttributeValue("XXX", ValueTest.NotEqual, "AAA")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeValue("XXX", ValueTest.NotEqual, "AAA"));
             AssertIdentities(es, "e0");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"));
 
-            es = t.Get<Element>(Condition.WithAttributeValue(Pair("X", "A1"))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeValue(Pair("X", "A1")));
             AssertIdentities(es, "e2");
             AssertPairs(es, "e2", Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.WithAttributeValue("X", ValueTest.LessThan,  "A1")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeValue("X", ValueTest.LessThan,  "A1"));
             AssertIdentities(es, "e0", "e1");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"));
             AssertPairs(es, "e1", Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.WithAttributeValue(Pair("XX", "AA1"))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeValue(Pair("XX", "AA1")));
             AssertIdentities(es, "e1");
             AssertPairs(es, "e1", Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.WithAttributeValue("XX", ValueTest.LessThan, "AA1")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeValue("XX", ValueTest.LessThan, "AA1"));
             AssertIdentities(es, "e0", "e2");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"));
             AssertPairs(es, "e2", Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.WithAttributeValue(Pair("XXX", "AAA1"))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeValue(Pair("XXX", "AAA1")));
             AssertIdentities(es, "e0");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"));
 
-            es = t.Get<Element>(Condition.WithAttributeValue("XXX", ValueTest.LessThan, "AAA1")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeValue("XXX", ValueTest.LessThan, "AAA1"));
             AssertIdentities(es, "e1", "e2");
             AssertPairs(es, "e1", Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"));
             AssertPairs(es, "e2", Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.WithAttributeValue(Pair("XXX", "AAA2"))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeValue(Pair("XXX", "AAA2")));
             AssertIdentities(es);
 
-            es = t.Get<Element>(Condition.WithAttributeValue("XXX", ValueTest.LessThan, "AAA2")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeValue("XXX", ValueTest.LessThan, "AAA2"));
             AssertIdentities(es, "e0", "e1", "e2");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"));
             AssertPairs(es, "e1", Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"));
             AssertPairs(es, "e2", Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.WithAttributeValue("XXX", ValueTest.GreaterOrEqual, "AAA2")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeValue("XXX", ValueTest.GreaterOrEqual, "AAA2"));
             AssertIdentities(es);
 
-            es = t.Get<Element>(Condition.WithAttributeValue(Pair("XXXX", "AAAA"))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeValue(Pair("XXXX", "AAAA")));
             AssertIdentities(es);
 
-            es = t.Get<Element>(Condition.WithAttributeValue("XXXX", ValueTest.LessThan, "AAAA")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeValue("XXXX", ValueTest.LessThan, "AAAA"));
             AssertIdentities(es);
 
-            es = t.Get<Element>(Condition.WithAttributeValue("XXXX", ValueTest.GreaterOrEqual, "AAAA")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeValue("XXXX", ValueTest.GreaterOrEqual, "AAAA"));
             AssertIdentities(es);
 
-            es = t.Get<Element>(Condition.WithAttributeValue("XXXX", ValueTest.NotEqual, "AAAA")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeValue("XXXX", ValueTest.NotEqual, "AAAA"));
             AssertIdentities(es);
         }
 
@@ -543,59 +543,59 @@ namespace Stratosphere.Table.Test
         {
             ITable t = _table;
 
-            var es = t.Get<Element>(Condition.WithAttributeIsNull("X")).ToDictionary(p => p.Key, p => p.Value);
-            Assert.Equal(0, es.Count);
+            var es = t.Get<Element>(Condition.WithAttributeIsNull("X"));
+            AssertIdentities(es);
 
-            es = t.Get<Element>(Condition.WithAttributeIsNull("XXXXX")).ToDictionary(p => p.Key, p => p.Value);
-            Assert.Equal(0, es.Count);
+            es = t.Get<Element>(Condition.WithAttributeIsNull("XXXXX"));
+            AssertIdentities(es);
 
             t.Set("e0", new Element(Pairs(Pair("X", "A"), Pair("XXX", "AAA"))));
             t.Set("e1", new Element(Pairs(Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA1"))));
             t.Set("e2", new Element(Pairs(Pair("X", "A2"), Pair("XX", "AA1"), Pair("XXXX", "AAAA2"))));
 
-            es = t.Get<Element>(Condition.WithAttributeIsNull("X")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeIsNull("X"));
             AssertIdentities(es);
 
-            es = t.Get<Element>(Condition.WithAttributeIsNotNull("X")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeIsNotNull("X"));
             AssertIdentities(es, "e0", "e1", "e2");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XXX", "AAA"));
             AssertPairs(es, "e1", Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA1"));
             AssertPairs(es, "e2", Pair("X", "A2"), Pair("XX", "AA1"), Pair("XXXX", "AAAA2"));
 
-            es = t.Get<Element>(Condition.WithAttributeIsNull("XX")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeIsNull("XX"));
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XXX", "AAA"));
             AssertIdentities(es, "e0");
 
-            es = t.Get<Element>(Condition.WithAttributeIsNotNull("XX")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeIsNotNull("XX"));
             AssertIdentities(es, "e1", "e2");
             AssertPairs(es, "e1", Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA1"));
             AssertPairs(es, "e2", Pair("X", "A2"), Pair("XX", "AA1"), Pair("XXXX", "AAAA2"));
 
-            es = t.Get<Element>(Condition.WithAttributeIsNull("XXX")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeIsNull("XXX"));
             AssertIdentities(es, "e2");
             AssertPairs(es, "e2", Pair("X", "A2"), Pair("XX", "AA1"), Pair("XXXX", "AAAA2"));
 
-            es = t.Get<Element>(Condition.WithAttributeIsNotNull("XXX")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeIsNotNull("XXX"));
             AssertIdentities(es, "e0", "e1");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XXX", "AAA"));
             AssertPairs(es, "e1", Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA1"));
 
-            es = t.Get<Element>(Condition.WithAttributeIsNull("XXXX")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeIsNull("XXXX"));
             AssertIdentities(es, "e0", "e1");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XXX", "AAA"));
             AssertPairs(es, "e1", Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA1"));
 
-            es = t.Get<Element>(Condition.WithAttributeIsNotNull("XXXX")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeIsNotNull("XXXX"));
             AssertIdentities(es, "e2");
             AssertPairs(es, "e2", Pair("X", "A2"), Pair("XX", "AA1"), Pair("XXXX", "AAAA2"));
 
-            es = t.Get<Element>(Condition.WithAttributeIsNull("XXXXX")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeIsNull("XXXXX"));
             AssertIdentities(es, "e0", "e1", "e2");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XXX", "AAA"));
             AssertPairs(es, "e1", Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA1"));
             AssertPairs(es, "e2", Pair("X", "A2"), Pair("XX", "AA1"), Pair("XXXX", "AAAA2"));
 
-            es = t.Get<Element>(Condition.WithAttributeIsNotNull("XXXXX")).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.WithAttributeIsNotNull("XXXXX"));
             AssertIdentities(es);
         }
 
@@ -604,26 +604,26 @@ namespace Stratosphere.Table.Test
         {
             ITable t = _table;
 
-            var es = t.Get<Element>().ToDictionary(p => p.Key, p => p.Value);
-            Assert.Equal(0, es.Count);
+            var es = t.Get<Element>();
+            AssertIdentities(es);
 
-            es = t.Get<Element>(Condition.And(new Condition[] { })).ToDictionary(p => p.Key, p => p.Value);
-            Assert.Equal(0, es.Count);
+            es = t.Get<Element>(Condition.And(new Condition[] { }));
+            AssertIdentities(es);
 
-            es = t.Get<Element>(Condition.And(Condition.And(new Condition[] { }), Condition.And(new Condition[] { }))).ToDictionary(p => p.Key, p => p.Value);
-            Assert.Equal(0, es.Count);
+            es = t.Get<Element>(Condition.And(Condition.And(new Condition[] { }), Condition.And(new Condition[] { })));
+            AssertIdentities(es);
 
             t.Set("e0", new Element(Pairs(Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"))));
             t.Set("e1", new Element(Pairs(Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"))));
             t.Set("e2", new Element(Pairs(Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"))));
 
-            es = t.Get<Element>().ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>();
             AssertIdentities(es, "e0", "e1", "e2");
 
-            es = t.Get<Element>(Condition.And(new Condition[] { })).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.And(new Condition[] { }));
             AssertIdentities(es, "e0", "e1", "e2");
 
-            es = t.Get<Element>(Condition.And(Condition.And(new Condition[] { }), Condition.And(new Condition[] { }))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.And(Condition.And(new Condition[] { }), Condition.And(new Condition[] { })));
             AssertIdentities(es, "e0", "e1", "e2");
         }
 
@@ -632,35 +632,35 @@ namespace Stratosphere.Table.Test
         {
             ITable t = _table;
 
-            var es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("X", "A")), Condition.WithAttributeValue(Pair("XX", "AA")))).ToDictionary(p => p.Key, p => p.Value);
-            Assert.Equal(0, es.Count);
+            var es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("X", "A")), Condition.WithAttributeValue(Pair("XX", "AA"))));
+            AssertIdentities(es);
 
-            es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("X", "A")), Condition.WithAttributeValue(Pair("XXX", "AAA")))).ToDictionary(p => p.Key, p => p.Value);
-            Assert.Equal(0, es.Count);
+            es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("X", "A")), Condition.WithAttributeValue(Pair("XXX", "AAA"))));
+            AssertIdentities(es);
 
             t.Set("e0", new Element(Pairs(Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"))));
             t.Set("e1", new Element(Pairs(Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"))));
             t.Set("e2", new Element(Pairs(Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"))));
 
-            es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("X", "A")), Condition.WithAttributeValue(Pair("XX", "AA")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("X", "A")), Condition.WithAttributeValue(Pair("XX", "AA"))));
             AssertIdentities(es, "e0");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"));
 
-            es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("X", "A")), Condition.WithAttributeValue(Pair("XXX", "AAA")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("X", "A")), Condition.WithAttributeValue(Pair("XXX", "AAA"))));
             AssertIdentities(es, "e1");
             AssertPairs(es, "e1", Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("XX", "AA")), Condition.WithAttributeValue(Pair("XXX", "AAA")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("XX", "AA")), Condition.WithAttributeValue(Pair("XXX", "AAA"))));
             AssertIdentities(es, "e2");
             AssertPairs(es, "e2", Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("X", "A1")), Condition.WithAttributeValue(Pair("XX", "AA1")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("X", "A1")), Condition.WithAttributeValue(Pair("XX", "AA1"))));
             AssertIdentities(es);
 
-            es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("X", "A1")), Condition.WithAttributeValue(Pair("XXX", "AAA1")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("X", "A1")), Condition.WithAttributeValue(Pair("XXX", "AAA1"))));
             AssertIdentities(es);
 
-            es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("XX", "AA1")), Condition.WithAttributeValue(Pair("XXX", "AAA1")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("XX", "AA1")), Condition.WithAttributeValue(Pair("XXX", "AAA1"))));
             AssertIdentities(es);
         }
 
@@ -669,50 +669,50 @@ namespace Stratosphere.Table.Test
         {
             ITable t = _table;
 
-            var es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("X", "A")), Condition.WithAttributeValue(Pair("XX", "AA")))).ToDictionary(p => p.Key, p => p.Value);
-            Assert.Equal(0, es.Count);
+            var es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("X", "A")), Condition.WithAttributeValue(Pair("XX", "AA"))));
+            AssertIdentities(es);
 
-            es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("X", "A")), Condition.WithAttributeValue(Pair("XXX", "AAA")))).ToDictionary(p => p.Key, p => p.Value);
-            Assert.Equal(0, es.Count);
+            es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("X", "A")), Condition.WithAttributeValue(Pair("XXX", "AAA"))));
+            AssertIdentities(es);
 
             t.Set("e0", new Element(Pairs(Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"))));
             t.Set("e1", new Element(Pairs(Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"))));
             t.Set("e2", new Element(Pairs(Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"))));
 
-            es = t.Get<Element>(Condition.Or(Condition.WithAttributeValue(Pair("X", "A")), Condition.WithAttributeValue(Pair("XX", "AA")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.Or(Condition.WithAttributeValue(Pair("X", "A")), Condition.WithAttributeValue(Pair("XX", "AA"))));
             AssertIdentities(es, "e0", "e1", "e2");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"));
             AssertPairs(es, "e1", Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"));
             AssertPairs(es, "e2", Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.Or(Condition.WithAttributeValue(Pair("X", "A")), Condition.WithAttributeValue(Pair("XXX", "AAA")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.Or(Condition.WithAttributeValue(Pair("X", "A")), Condition.WithAttributeValue(Pair("XXX", "AAA"))));
             AssertIdentities(es, "e0", "e1", "e2");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"));
             AssertPairs(es, "e1", Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"));
             AssertPairs(es, "e2", Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.Or(Condition.WithAttributeValue(Pair("XX", "AA")), Condition.WithAttributeValue(Pair("XXX", "AAA")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.Or(Condition.WithAttributeValue(Pair("XX", "AA")), Condition.WithAttributeValue(Pair("XXX", "AAA"))));
             AssertIdentities(es, "e0", "e1", "e2");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"));
             AssertPairs(es, "e1", Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"));
             AssertPairs(es, "e2", Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.Or(Condition.WithAttributeValue(Pair("X", "A1")), Condition.WithAttributeValue(Pair("XX", "AA1")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.Or(Condition.WithAttributeValue(Pair("X", "A1")), Condition.WithAttributeValue(Pair("XX", "AA1"))));
             AssertIdentities(es, "e1", "e2");
             AssertPairs(es, "e1", Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"));
             AssertPairs(es, "e2", Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.Or(Condition.WithAttributeValue(Pair("X", "A1")), Condition.WithAttributeValue(Pair("XXX", "AAA1")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.Or(Condition.WithAttributeValue(Pair("X", "A1")), Condition.WithAttributeValue(Pair("XXX", "AAA1"))));
             AssertIdentities(es, "e0", "e2");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"));
             AssertPairs(es, "e2", Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.Or(Condition.WithAttributeValue(Pair("XX", "AA1")), Condition.WithAttributeValue(Pair("XXX", "AAA1")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.Or(Condition.WithAttributeValue(Pair("XX", "AA1")), Condition.WithAttributeValue(Pair("XXX", "AAA1"))));
             AssertIdentities(es, "e0", "e1");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"));
             AssertPairs(es, "e1", Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.Or(Condition.WithAttributeValue(Pair("X", "A1")), Condition.WithAttributeValue(Pair("XX", "AA1")), Condition.WithAttributeValue(Pair("XXX", "AAA1")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.Or(Condition.WithAttributeValue(Pair("X", "A1")), Condition.WithAttributeValue(Pair("XX", "AA1")), Condition.WithAttributeValue(Pair("XXX", "AAA1"))));
             AssertIdentities(es, "e0", "e1", "e2");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"));
             AssertPairs(es, "e1", Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"));
@@ -724,34 +724,34 @@ namespace Stratosphere.Table.Test
         {
             ITable t = _table;
 
-            var es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNull("X"), Condition.WithAttributeValue(Pair("XX", "AA")))).ToDictionary(p => p.Key, p => p.Value);
-            Assert.Equal(0, es.Count);
+            var es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNull("X"), Condition.WithAttributeValue(Pair("XX", "AA"))));
+            AssertIdentities(es);
 
-            es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNull("XXXXX"), Condition.WithAttributeValue(Pair("X", "A")))).ToDictionary(p => p.Key, p => p.Value);
-            Assert.Equal(0, es.Count);
+            es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNull("XXXXX"), Condition.WithAttributeValue(Pair("X", "A"))));
+            AssertIdentities(es);
 
             t.Set("e0", new Element(Pairs(Pair("X", "A"), Pair("XXX", "AAA"))));
             t.Set("e1", new Element(Pairs(Pair("XXX", "AAA"), Pair("XXXX", "AAAA"))));
             t.Set("e2", new Element(Pairs(Pair("XX", "AA"), Pair("XXXX", "AAAA"))));
 
-            es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNull("X"), Condition.WithAttributeValue(Pair("XX", "AA")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNull("X"), Condition.WithAttributeValue(Pair("XX", "AA"))));
             AssertIdentities(es, "e2");
             AssertPairs(es, "e2", Pair("XX", "AA"), Pair("XXXX", "AAAA"));
 
-            es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNull("X"), Condition.WithAttributeValue(Pair("XXXX", "AAAA")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNull("X"), Condition.WithAttributeValue(Pair("XXXX", "AAAA"))));
             AssertIdentities(es, "e1", "e2");
             AssertPairs(es, "e1", Pair("XXX", "AAA"), Pair("XXXX", "AAAA"));
             AssertPairs(es, "e2", Pair("XX", "AA"), Pair("XXXX", "AAAA"));
 
-            es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNull("XX"), Condition.WithAttributeValue(Pair("XXX", "AAA")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNull("XX"), Condition.WithAttributeValue(Pair("XXX", "AAA"))));
             AssertIdentities(es, "e0", "e1");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XXX", "AAA"));
             AssertPairs(es, "e1", Pair("XXX", "AAA"), Pair("XXXX", "AAAA"));
 
-            es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNull("XXX"), Condition.WithAttributeValue(Pair("X", "A")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNull("XXX"), Condition.WithAttributeValue(Pair("X", "A"))));
             AssertIdentities(es);
 
-            es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNull("XXX"), Condition.WithAttributeValue(Pair("XX", "AA1")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNull("XXX"), Condition.WithAttributeValue(Pair("XX", "AA1"))));
             AssertIdentities(es);
         }
 
@@ -760,32 +760,32 @@ namespace Stratosphere.Table.Test
         {
             ITable t = _table;
 
-            var es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNotNull("XX"), Condition.WithAttributeValue(Pair("XX", "AA")))).ToDictionary(p => p.Key, p => p.Value);
-            Assert.Equal(0, es.Count);
+            var es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNotNull("XX"), Condition.WithAttributeValue(Pair("XX", "AA"))));
+            AssertIdentities(es);
 
-            es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNotNull("XXXXX"), Condition.WithAttributeValue(Pair("X", "A")))).ToDictionary(p => p.Key, p => p.Value);
-            Assert.Equal(0, es.Count);
+            es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNotNull("XXXXX"), Condition.WithAttributeValue(Pair("X", "A"))));
+            AssertIdentities(es);
 
             t.Set("e0", new Element(Pairs(Pair("XX", "AA1"), Pair("XXX", "AAA"))));
             t.Set("e1", new Element(Pairs(Pair("XXX", "AAA"), Pair("XXXX", "AAAA"))));
             t.Set("e2", new Element(Pairs(Pair("XX", "AA"), Pair("XXXX", "AAAA"))));
 
-            es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNotNull("XXXX"), Condition.WithAttributeValue(Pair("XX", "AA")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNotNull("XXXX"), Condition.WithAttributeValue(Pair("XX", "AA"))));
             AssertIdentities(es, "e2");
             AssertPairs(es, "e2", Pair("XX", "AA"), Pair("XXXX", "AAAA"));
 
-            es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNotNull("XXX"), Condition.WithAttributeValue(Pair("XXXX", "AAAA")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNotNull("XXX"), Condition.WithAttributeValue(Pair("XXXX", "AAAA"))));
             AssertIdentities(es, "e1");
             AssertPairs(es, "e1", Pair("XXX", "AAA"), Pair("XXXX", "AAAA"));
 
-            es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNotNull("XX"), Condition.WithAttributeValue(Pair("XXX", "AAA")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNotNull("XX"), Condition.WithAttributeValue(Pair("XXX", "AAA"))));
             AssertIdentities(es, "e0");
             AssertPairs(es, "e0", Pair("XX", "AA1"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNotNull("XXX"), Condition.WithAttributeValue(Pair("X", "A")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNotNull("XXX"), Condition.WithAttributeValue(Pair("X", "A"))));
             AssertIdentities(es);
 
-            es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNotNull("XXX"), Condition.WithAttributeValue(Pair("XXXX", "AAAA1")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.And(Condition.WithAttributeIsNotNull("XXX"), Condition.WithAttributeValue(Pair("XXXX", "AAAA1"))));
             AssertIdentities(es);
         }
 
@@ -794,59 +794,78 @@ namespace Stratosphere.Table.Test
         {
             ITable t = _table;
 
-            var es = t.Get<Element>(Condition.And(Condition.WithItemName("e0"), Condition.WithAttributeValue(Pair("XX", "AA")))).ToDictionary(p => p.Key, p => p.Value);
-            Assert.Equal(0, es.Count);
+            var es = t.Get<Element>(Condition.And(Condition.WithItemName("e0"), Condition.WithAttributeValue(Pair("XX", "AA"))));
+            AssertIdentities(es);
 
-            es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("XXX", "AAA")), Condition.WithItemName("e1"))).ToDictionary(p => p.Key, p => p.Value);
-            Assert.Equal(0, es.Count);
+            es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("XXX", "AAA")), Condition.WithItemName("e1")));
+            AssertIdentities(es);
 
             t.Set("e0", new Element(Pairs(Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"))));
             t.Set("e1", new Element(Pairs(Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"))));
             t.Set("e2", new Element(Pairs(Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"))));
 
-            es = t.Get<Element>(Condition.And(Condition.WithItemName("e0"), Condition.WithAttributeValue(Pair("XX", "AA")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.And(Condition.WithItemName("e0"), Condition.WithAttributeValue(Pair("XX", "AA"))));
             AssertIdentities(es, "e0");
             AssertPairs(es, "e0", Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"));
 
-            es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("XXX", "AAA")), Condition.WithItemName("e1"))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("XXX", "AAA")), Condition.WithItemName("e1")));
             AssertIdentities(es, "e1");
             AssertPairs(es, "e1", Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.And(Condition.WithItemName("e2"), Condition.WithAttributeValue(Pair("XX", "AA")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.And(Condition.WithItemName("e2"), Condition.WithAttributeValue(Pair("XX", "AA"))));
             AssertIdentities(es, "e2");
             AssertPairs(es, "e2", Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"));
 
-            es = t.Get<Element>(Condition.And(Condition.WithItemName("e1"), Condition.WithAttributeValue(Pair("X", "A1")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.And(Condition.WithItemName("e1"), Condition.WithAttributeValue(Pair("X", "A1"))));
             AssertIdentities(es);
 
-            es = t.Get<Element>(Condition.And(Condition.WithItemName("e0"), Condition.WithAttributeValue(Pair("XX", "AA1")))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.And(Condition.WithItemName("e0"), Condition.WithAttributeValue(Pair("XX", "AA1"))));
             AssertIdentities(es);
 
-            es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("XXX", "AAA1")), Condition.WithItemName("e2"))).ToDictionary(p => p.Key, p => p.Value);
+            es = t.Get<Element>(Condition.And(Condition.WithAttributeValue(Pair("XXX", "AAA1")), Condition.WithItemName("e2")));
             AssertIdentities(es);
         }
 
-        private void AssertIdentities(Dictionary<string, Element> elements, params string[] ids)
+        private static Dictionary<string, Element> ToDictionary(IEnumerable<KeyValuePair<string, Element>> elements)
         {
-            Assert.Equal(ids.Length, elements.Count);
+            var d = new Dictionary<string, Element>();
+
+            foreach (KeyValuePair<string, Element> pair in elements)
+            {
+                if (!d.ContainsKey(pair.Key))
+                {
+                    d.Add(pair.Key, pair.Value);
+                }
+            }
+
+            return d;
+        }
+
+        private void AssertIdentities(IEnumerable<KeyValuePair<string, Element>> elements, params string[] ids)
+        {
+            var d = ToDictionary(elements);
+
+            Assert.Equal(ids.Length, d.Count);
 
             for (int i = 0; i < ids.Length; i++)
             {
-                Assert.True(elements.ContainsKey(ids[i]));
-                Assert.NotNull(elements[ids[i]]);
+                Assert.True(d.ContainsKey(ids[i]));
+                Assert.NotNull(d[ids[i]]);
             }
         }
 
-        private void AssertPairs(Dictionary<string, Element> elements, string id, params KeyValuePair<string, string>[] ps)
+        private void AssertPairs(IEnumerable<KeyValuePair<string, Element>> elements, string id, params KeyValuePair<string, string>[] ps)
         {
-            Assert.True(elements.ContainsKey(id));
-            Assert.NotNull(elements[id]);
-            Assert.Equal(ps.Length, elements[id].Count);
+            var d = ToDictionary(elements);
+
+            Assert.True(d.ContainsKey(id));
+            Assert.NotNull(d[id]);
+            Assert.Equal(ps.Length, d[id].Count);
 
             for (int i = 0; i < ps.Length; i++)
             {
-                Assert.True(elements[id].ContainsKey(ps[i].Key));
-                Assert.Equal(elements[id][ps[i].Key], ps[i].Value);
+                Assert.True(d[id].ContainsKey(ps[i].Key));
+                Assert.Equal(d[id][ps[i].Key], ps[i].Value);
             }
         }
 

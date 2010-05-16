@@ -67,7 +67,7 @@ namespace Stratosphere.Table
         public static IEnumerable<KeyValuePair<string, T>> Get<T>(this ITable table, IEnumerable<string> attributeNames, Condition condition)
             where T : IDictionary<string, string>, new()
         {
-            return Get<T>(table, new string[] { }, condition, false);
+            return Get<T>(table, attributeNames, condition, false);
         }
 
         public static IEnumerable<KeyValuePair<string, T>> Get<T>(this ITable table, IEnumerable<string> attributeNames, Condition condition, bool withConsistency)

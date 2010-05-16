@@ -443,13 +443,16 @@ namespace Stratosphere.Table.Sdb
 
         private static string BuildSelectExpression(string domainName, IEnumerable<string> attributeNames, Condition condition, int? selectLimit)
         {
+            string[] attributeNamesArray = (attributeNames == null ? new string[] { } : attributeNames.Distinct().ToArray());
+            bool isSelectCount = (attributeNamesArray.Length == 1 && attributeNamesArray[0] == TableExtension.CountAttribute);
+
             StringBuilder builder = new StringBuilder("select ");
-            builder.Append(BuildSelectList(attributeNames.Distinct()));
+            builder.Append(BuildSelectList(attributeNamesArray));
             builder.Append(" from ");
             builder.Append(domainName);
             builder.Append(BuildWhereClause(condition));
 
-            if (selectLimit.HasValue)
+            if (selectLimit.HasValue && !isSelectCount)
             {
                 builder.Append(" limit ");
                 builder.Append(selectLimit.Value);
@@ -655,26 +658,26 @@ namespace Stratosphere.Table.Sdb
             return string.Empty;
         }
 
-        private static string BuildSelectList(IEnumerable<string> attributeKeys)
+        private static string BuildSelectList(string[] attributeNames)
         {
-            StringBuilder builder = new StringBuilder();
-
-            foreach (string key in attributeKeys)
+            if (attributeNames.Length != 0)
             {
-                if (builder.Length != 0)
+                StringBuilder builder = new StringBuilder();
+
+                for (int i = 0; i < attributeNames.Length; i++)
                 {
-                    builder.Append(',');
+                    if (i != 0)
+                    {
+                        builder.Append(',');
+                    }
+
+                    builder.Append(attributeNames[i]);
                 }
 
-                builder.Append(key);
+                return builder.ToString();
             }
 
-            if (builder.Length == 0)
-            {
-                builder.Append('*');
-            }
-
-            return builder.ToString();
+            return "*";
         }
 
         private static IEnumerable<XElement> SelectElements(SdbService service, string selectExpression, bool withConsistency)
