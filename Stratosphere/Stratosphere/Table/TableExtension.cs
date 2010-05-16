@@ -67,7 +67,13 @@ namespace Stratosphere.Table
         public static IEnumerable<KeyValuePair<string, T>> Get<T>(this ITable table, IEnumerable<string> attributeNames, Condition condition)
             where T : IDictionary<string, string>, new()
         {
-            using (IReader reader = table.Select(attributeNames, condition))
+            return Get<T>(table, new string[] { }, condition, false);
+        }
+
+        public static IEnumerable<KeyValuePair<string, T>> Get<T>(this ITable table, IEnumerable<string> attributeNames, Condition condition, bool withConsistency)
+            where T : IDictionary<string, string>, new()
+        {
+            using (IReader reader = table.Select(attributeNames, condition, withConsistency))
             {
                 T itemData = default(T);
                 string itemName = null;
@@ -115,7 +121,12 @@ namespace Stratosphere.Table
 
         public static IEnumerable<KeyValuePair<string, string>> Select(this ITable table, string attributeName, Condition condition)
         {
-            using (IReader reader = table.Select(new string[] { attributeName }, condition))
+            return Select(table, attributeName, condition, false);
+        }
+
+        public static IEnumerable<KeyValuePair<string, string>> Select(this ITable table, string attributeName, Condition condition, bool withConsistency)
+        {
+            using (IReader reader = table.Select(new string[] { attributeName }, condition, withConsistency))
             {
                 while (reader.Read())
                 {
@@ -127,6 +138,11 @@ namespace Stratosphere.Table
             }
         }
 
+        public static IReader Select(this ITable table, IEnumerable<string> attributeNames, Condition condition)
+        {
+            return table.Select(attributeNames, condition, false);
+        }
+
         public static IEnumerable<string> Select(this ITable table)
         {
             return Select(table, (Condition)null);
@@ -134,7 +150,12 @@ namespace Stratosphere.Table
 
         public static IEnumerable<string> Select(this ITable table, Condition condition)
         {
-            using (IReader reader = table.Select(new string[] { ItemNameAttribute }, condition))
+            return Select(table, condition, false);
+        }
+
+        public static IEnumerable<string> Select(this ITable table, Condition condition, bool withConsistency)
+        {
+            using (IReader reader = table.Select(new string[] { ItemNameAttribute }, condition, withConsistency))
             {
                 while (reader.Read())
                 {
@@ -143,6 +164,30 @@ namespace Stratosphere.Table
             }
         }
 
+        public static long SelectCount(this ITable table)
+        {
+            return SelectCount(table, null);
+        }
+
+        public static long SelectCount(this ITable table, Condition condition)
+        {
+            return SelectCount(table, condition, false);
+        }
+
+        public static long SelectCount(this ITable table, Condition condition, bool withConsistency)
+        {
+            using (IReader reader = table.Select(new string[] { CountAttribute }, condition, withConsistency))
+            {
+                if (reader.Read())
+                {
+                    return long.Parse(reader.AttributeValue);
+                }
+            }
+
+            return 0;
+        }
+
         public const string ItemNameAttribute = "itemName()";
+        public const string CountAttribute = "count(*)";
     }
 }

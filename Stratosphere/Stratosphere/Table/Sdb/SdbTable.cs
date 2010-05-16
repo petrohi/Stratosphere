@@ -45,7 +45,12 @@ namespace Stratosphere.Table.Sdb
 
         public static IReader Select(string serviceId, string serviceSecret, string selectExpression)
         {
-            return new Reader(SelectElements(new SdbService(serviceId, serviceSecret), selectExpression));
+            return Select(serviceId, serviceSecret, selectExpression, false);
+        }
+
+        public static IReader Select(string serviceId, string serviceSecret, string selectExpression, bool withConsistency)
+        {
+            return new Reader(SelectElements(new SdbService(serviceId, serviceSecret), selectExpression, withConsistency));
         }
 
         public static SdbTable Get(string serviceId, string serviceSecret, string domainName)
@@ -407,28 +412,14 @@ namespace Stratosphere.Table.Sdb
             }
         }
 
-        public IReader Select(IEnumerable<string> attributeNames, Condition condition)
+        public IReader Select(IEnumerable<string> attributeNames, Condition condition, bool withConsistency)
         {
-            return new Reader(SelectElements(attributeNames, condition));
-        }
-
-        public long SelectCount(Condition condition)
-        {
-            using (IReader reader = Select(new string[] { "count(*)" }, condition))
-            {
-                if (reader.Read() &&
-                    reader.AttributeName == "Count")
-                {
-                    return long.Parse(reader.AttributeValue);
-                }
-            }
-
-            return 0;
+            return new Reader(SelectElements(attributeNames, condition, withConsistency));
         }
 
         private class SelectBuilder : AmazonActionBuilder
         {
-            public SelectBuilder(string selectExpression, string nextToken)
+            public SelectBuilder(string selectExpression, string nextToken, bool withConsistency)
                 : base("Select")
             {
                 Add("SelectExpression", selectExpression);
@@ -437,12 +428,17 @@ namespace Stratosphere.Table.Sdb
                 {
                     Add("NextToken", nextToken);
                 }
+
+                if (withConsistency)
+                {
+                    Add("ConsistentRead", TrueString);
+                }
             }
         }
 
-        private IEnumerable<XElement> SelectElements(IEnumerable<string> attributeNames, Condition condition)
+        private IEnumerable<XElement> SelectElements(IEnumerable<string> attributeNames, Condition condition, bool withConsistency)
         {
-            return SelectElements(_service, BuildSelectExpression(_domainName, attributeNames, condition, _selectLimit));
+            return SelectElements(_service, BuildSelectExpression(_domainName, attributeNames, condition, _selectLimit), withConsistency);
         }
 
         private static string BuildSelectExpression(string domainName, IEnumerable<string> attributeNames, Condition condition, int? selectLimit)
@@ -681,14 +677,14 @@ namespace Stratosphere.Table.Sdb
             return builder.ToString();
         }
 
-        private static IEnumerable<XElement> SelectElements(SdbService service, string selectExpression)
+        private static IEnumerable<XElement> SelectElements(SdbService service, string selectExpression, bool withConsistency)
         {
             string nextToken = null;
 
             do
             {
                 XElement responseElement = service.Execute(
-                    new SelectBuilder(selectExpression, nextToken));
+                    new SelectBuilder(selectExpression, nextToken, withConsistency));
 
                 foreach (XElement itemElement in responseElement.Descendants(Sdb + "Item"))
                 {

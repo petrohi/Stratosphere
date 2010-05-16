@@ -9,9 +9,8 @@ namespace Stratosphere.Table
     {
         void Put(string name, Action<IPutWriter> action);
         void Delete(string name, Action<IDeleteWriter> action);
-        
-        IReader Select(IEnumerable<string> attributeNames, Condition condition);
-        long SelectCount(Condition condition);
+
+        IReader Select(IEnumerable<string> attributeNames, Condition condition, bool withConsistency);
 
         void Delete();
     }

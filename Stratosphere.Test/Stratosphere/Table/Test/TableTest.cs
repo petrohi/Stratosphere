@@ -159,6 +159,43 @@ namespace Stratosphere.Table.Test
         }
 
         [Fact]
+        public void WriteExpected()
+        {
+            ITable t = _table;
+
+            t.Put("e0", w => { w.WhenExpectedNotExists("X"); w.AddAttribute("X", "A"); });
+            t.Put("e0", w => { w.WhenExpectedNotExists("XX"); w.AddAttribute("XX", "AA"); });
+            t.Put("e0", w => { w.WhenExpectedNotExists("XXX"); w.AddAttribute("XXX", "AAA"); });
+            Assert.Throws<ExpectationException>(() => t.Delete("e0", w => { w.WhenExpectedNotExists("XXX"); w.DeleteAttribute("X"); }));
+            t.Delete("e0", w => { w.WhenExpectedNotExists("XXXX"); w.DeleteAttribute("XXX"); });
+            t.Delete("e0", w => { w.WhenExpectedNotExists("XXX"); w.DeleteAttribute("XX"); });
+            t.Delete("e0", w => { w.WhenExpectedNotExists("XX"); w.DeleteAttribute("X"); });
+            t.Put("e0", w => { w.WhenExpectedNotExists("X"); w.AddAttribute("X", "A"); });
+            t.Put("e0", w => { w.WhenExpectedNotExists("XX"); w.AddAttribute("XX", "AA"); });
+            t.Put("e0", w => { w.WhenExpectedNotExists("XXX"); w.AddAttribute("XXX", "AAA"); });
+            Assert.Throws<ExpectationException>(() => t.Delete("e0", w => { w.WhenExpectedNotExists("XXX"); w.DeleteAttribute("X"); }));
+
+            Assert.Throws<ExpectationException>(() => t.Put("e1", w => { w.WhenExpected("X", "A"); w.AddAttribute("XX", "AA"); }));
+            Assert.Throws<ExpectationException>(() => t.Put("e1", w => { w.WhenExpected("XX", "AA"); w.AddAttribute("XXX", "AAA"); }));
+            Assert.Throws<ExpectationException>(() => t.Put("e1", w => { w.WhenExpected("XXX", "AAA"); w.AddAttribute("XXXX", "AAAA"); }));
+            Assert.Throws<ExpectationException>(() => t.Delete("e1", w => { w.WhenExpected("XXX", "AAA"); w.DeleteAttribute("XXXX", "AAAA"); }));
+            Assert.Throws<ExpectationException>(() => t.Delete("e1", w => { w.WhenExpected("XX", "AA"); w.DeleteAttribute("XXX", "AAA"); }));
+            Assert.Throws<ExpectationException>(() => t.Delete("e1", w => { w.WhenExpected("X", "A"); w.DeleteAttribute("XX", "AA"); }));
+            t.Put("e1", w => { w.AddAttribute("X", "A"); });
+            t.Put("e1", w => { w.WhenExpected("X", "A"); w.AddAttribute("XX", "AA"); });
+            t.Put("e1", w => { w.WhenExpected("XX", "AA"); w.AddAttribute("XXX", "AAA"); });
+            t.Put("e1", w => { w.WhenExpected("XXX", "AAA"); w.AddAttribute("XXXX", "AAAA"); });
+            Assert.Throws<ExpectationException>(() => t.Put("e1", w => { w.WhenExpected("XXXXX", "AAAAA"); w.AddAttribute("XXX", "AAA"); }));
+            Assert.Throws<ExpectationException>(() => t.Put("e1", w => { w.WhenExpected("X", "A1"); w.AddAttribute("XX", "AA"); }));
+            t.Delete("e1", w => { w.WhenExpected("XXX", "AAA"); w.DeleteAttribute("XXXX", "AAAA"); });
+            t.Delete("e1", w => { w.WhenExpected("XX", "AA"); w.DeleteAttribute("XXX", "AAA"); });
+            t.Delete("e1", w => { w.WhenExpected("X", "A"); w.DeleteAttribute("XX", "AA"); });
+            t.Put("e1", w => { w.WhenExpected("X", "A"); w.AddAttribute("XX", "AA"); });
+            t.Put("e1", w => { w.WhenExpected("XX", "AA"); w.AddAttribute("XXX", "AAA"); });
+            t.Put("e1", w => { w.WhenExpected("XXX", "AAA"); w.AddAttribute("XXXX", "AAAA"); });
+        }
+
+        [Fact]
         public void Set()
         {
             ITable t = _table;
@@ -219,6 +256,28 @@ namespace Stratosphere.Table.Test
             es = t.Get<Element>().ToDictionary(p => p.Key, p => p.Value);
 
             AssertIdentities(es);
+        }
+
+        [Fact]
+        public void Count()
+        {
+            ITable t = _table;
+
+            Assert.Equal(0, t.SelectCount());
+
+            t.Set("e0", new Element(Pairs(Pair("X", "A"))));
+            Assert.Equal(1, t.SelectCount());
+
+            t.Set("e1", new Element(Pairs(Pair("X", "A1"))));
+            Assert.Equal(2, t.SelectCount());
+
+            t.Set("e2", new Element(Pairs(Pair("X", "A1"))));
+            Assert.Equal(3, t.SelectCount());
+
+            Assert.Equal(3, t.SelectCount(Condition.WithAttributeIsNotNull("X")));
+            Assert.Equal(3, t.SelectCount(Condition.WithAttributeIsNull("XX")));
+            Assert.Equal(1, t.SelectCount(Condition.WithAttributeValue("X", "A")));
+            Assert.Equal(2, t.SelectCount(Condition.WithAttributeValue("X", "A1")));
         }
 
         [Fact]

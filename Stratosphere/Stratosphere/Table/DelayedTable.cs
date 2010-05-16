@@ -29,16 +29,10 @@ namespace Stratosphere.Table
             _table.Delete(name, action);
         }
 
-        public IReader Select(IEnumerable<string> attributeNames, Condition condition)
+        public IReader Select(IEnumerable<string> attributeNames, Condition condition, bool withConsistency)
         {
             Delay();
-            return _table.Select(attributeNames, condition);
-        }
-
-        public long SelectCount(Condition condition)
-        {
-            Delay();
-            return _table.SelectCount(condition);
+            return _table.Select(attributeNames, condition, withConsistency);
         }
         
         public void Delete()

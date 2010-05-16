@@ -42,14 +42,9 @@ namespace Stratosphere.Table.Test
                 AmazonReliability.Execute(() => { _table.Delete(name, action); });
             }
 
-            public IReader Select(IEnumerable<string> attributeNames, Condition condition)
+            public IReader Select(IEnumerable<string> attributeNames, Condition condition, bool withConsistency)
             {
-                return AmazonReliability.Execute(() => _table.Select(attributeNames, condition));
-            }
-
-            public long SelectCount(Condition condition)
-            {
-                return AmazonReliability.Execute(() => _table.SelectCount(condition));
+                return AmazonReliability.Execute(() => _table.Select(attributeNames, condition, withConsistency));
             }
         }
     }

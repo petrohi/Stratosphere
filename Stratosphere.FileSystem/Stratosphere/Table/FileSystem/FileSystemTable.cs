@@ -38,7 +38,7 @@ namespace Stratosphere.Table.FileSystem
         private IDbConnection EnsureConnection()
         {
             IDbConnection connection = new SQLiteConnection();
-            
+
             lock (_guard)
             {
                 bool exists = File.Exists(_fileName);
@@ -117,14 +117,41 @@ namespace Stratosphere.Table.FileSystem
             public ExpectedItemBuilder(IDbConnection connection, string name) :
                 base(connection, name) { }
 
-            public void  WhenExpected(string name, string value)
+            public void WhenExpected(string name, string value)
             {
- 	            throw new NotImplementedException();
+                AddAction(() =>
+                {
+                    using (IDbCommand command = CreateCommand())
+                    {
+                        command.CommandText = "select a.inum from attribute a where a.inum=@inum and a.name=@aname and a.value=@avalue";
+                        AddParameter(command, "@inum", Number);
+                        AddParameter(command, "@aname", name);
+                        AddParameter(command, "@avalue", value);
+
+                        if (command.ExecuteScalar() == null)
+                        {
+                            throw new ExpectationException();
+                        }
+                    }
+                });
             }
 
-            public void  WhenExpectedNotExists(string name)
+            public void WhenExpectedNotExists(string name)
             {
- 	            throw new NotImplementedException();
+                AddAction(() =>
+                {
+                    using (IDbCommand command = CreateCommand())
+                    {
+                        command.CommandText = "select a.inum from attribute a where a.inum=@inum and a.name=@aname";
+                        AddParameter(command, "@inum", Number);
+                        AddParameter(command, "@aname", name);
+
+                        if (command.ExecuteScalar() != null)
+                        {
+                            throw new ExpectationException();
+                        }
+                    }
+                });
             }
         }
 
@@ -315,7 +342,7 @@ namespace Stratosphere.Table.FileSystem
         {
             private readonly IDbConnection _connection;
             private readonly IDbCommand _command;
-            
+
             private IDataReader _reader;
             private int _parameterIndex;
             private string _lastItemName;
@@ -418,7 +445,7 @@ namespace Stratosphere.Table.FileSystem
                 {
                     if (_reader != null && !_reader.IsDBNull(2))
                     {
-                        return _reader.GetString(2);
+                        return _reader.GetValue(2).ToString();
                     }
 
                     return string.Empty;
@@ -438,18 +465,23 @@ namespace Stratosphere.Table.FileSystem
 
             private void BuildCommand(IDbCommand command, IEnumerable<string> attributeNames, Condition condition)
             {
-                StringBuilder builder = new StringBuilder("select i.name, ");
+                StringBuilder builder = new StringBuilder("select ");
 
                 string[] attributeNamesArray = attributeNames == null ? new string[] { } : attributeNames.ToArray();
-                bool isItemName = attributeNamesArray.Length == 1 && attributeNamesArray[0] == TableExtension.ItemNameAttribute;
+                bool isSelectCount = attributeNamesArray.Length == 1 && attributeNamesArray[0] == TableExtension.CountAttribute;
+                bool isSelectItemName = attributeNamesArray.Length == 1 && attributeNamesArray[0] == TableExtension.ItemNameAttribute;
 
-                if (isItemName)
+                if (isSelectCount)
                 {
-                    builder.Append("null, null from item i");
+                    builder.Append("'Domain', 'Count', count(i.num) from item i");
+                }
+                else if (isSelectItemName)
+                {
+                    builder.Append("i.name, null, null from item i");
                 }
                 else
                 {
-                    builder.Append("a.name, a.value from item i left join attribute a on i.num=a.inum");
+                    builder.Append("i.name, a.name, a.value from item i left join attribute a on i.num=a.inum");
                 }
 
                 builder.Append(" where (select count(*) from attribute a where a.inum=i.num) != 0");
@@ -466,7 +498,7 @@ namespace Stratosphere.Table.FileSystem
                     }
                 }
 
-                if (attributeNamesArray.Length != 0 && !isItemName)
+                if (attributeNamesArray.Length != 0 && !isSelectCount && !isSelectItemName)
                 {
                     string clause = ContinueBuildSelectionWhereClause(command, attributeNamesArray);
 
@@ -478,13 +510,16 @@ namespace Stratosphere.Table.FileSystem
                     }
                 }
 
-                if (isItemName)
+                if (!isSelectCount)
                 {
-                    builder.Append(" order by i.name");
-                }
-                else
-                {
-                    builder.Append(" order by i.name, a.name");
+                    if (isSelectItemName)
+                    {
+                        builder.Append(" order by i.name");
+                    }
+                    else
+                    {
+                        builder.Append(" order by i.name, a.name");
+                    }
                 }
 
                 command.CommandText = builder.ToString();
@@ -712,24 +747,9 @@ namespace Stratosphere.Table.FileSystem
             }
         }
 
-        public IReader Select(IEnumerable<string> attributeNames, Condition condition)
+        public IReader Select(IEnumerable<string> attributeNames, Condition condition, bool withConsistency)
         {
             return new Reader(EnsureConnection(), attributeNames, condition);
-        }
-
-        public long SelectCount(Condition condition)
-        {
-            long count = 0;
-
-            using (IReader reader = Select(new string[] { "itemName()" }, condition))
-            {
-                while (reader.Read())
-                {
-                    count++;
-                }
-            }
-
-            return count;
         }
     }
 }
