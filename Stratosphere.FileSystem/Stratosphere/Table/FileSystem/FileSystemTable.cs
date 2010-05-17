@@ -162,23 +162,31 @@ namespace Stratosphere.Table.FileSystem
 
             public void ReplaceAttribute(string name, string value)
             {
-                AddAction(() =>
-                {
-                    using (IDbCommand command = CreateCommand())
-                    {
-                        command.CommandText = "delete from attribute where inum=@inum and name=@name";
-                        AddParameter(command, "@inum", Number);
-                        AddParameter(command, "@name", name);
-
-                        command.ExecuteNonQuery();
-                    }
-                });
-
-                AddAttribute(name, value);
+                AddAttribute(name, value, true);
             }
 
             public void AddAttribute(string name, string value)
             {
+                AddAttribute(name, value, false);
+            }
+
+            private void AddAttribute(string name, string value, bool withReplace)
+            {
+                if (withReplace)
+                {
+                    AddAction(() =>
+                    {
+                        using (IDbCommand command = CreateCommand())
+                        {
+                            command.CommandText = "delete from attribute where inum=@inum and name=@name";
+                            AddParameter(command, "@inum", Number);
+                            AddParameter(command, "@name", name);
+
+                            command.ExecuteNonQuery();
+                        }
+                    });
+                }
+
                 AddAction(() =>
                 {
                     using (IDbCommand command = CreateCommand())
@@ -186,6 +194,98 @@ namespace Stratosphere.Table.FileSystem
                         command.CommandText = "insert or replace into attribute(inum, name, value) values(@inum, @name, @value)";
                         AddParameter(command, "@inum", Number);
                         AddParameter(command, "@name", name);
+                        AddParameter(command, "@value", value);
+
+                        command.ExecuteNonQuery();
+                    }
+                });
+            }
+        }
+
+        private class BatchPutBuilder : TransactionBuilder, IBatchPutWriter
+        {
+            private Dictionary<string, long> _itemNumbers = new Dictionary<string, long>();
+
+            public BatchPutBuilder(IDbConnection connection) :
+                base(connection) { }
+
+            public void ReplaceAttribute(string itemName, string attributeName, string value)
+            {
+                AddAttribute(itemName, attributeName, value, true);
+            }
+
+            public void AddAttribute(string itemName, string attributeName, string value)
+            {
+                AddAttribute(itemName, attributeName, value, false);
+            }
+
+            private void EnsureItem(string name)
+            {
+                if (!_itemNumbers.ContainsKey(name))
+                {
+                    AddAction(() =>
+                    {
+                        object scalar;
+                        long number;
+
+                        using (IDbCommand command = CreateCommand())
+                        {
+                            command.CommandText = "select num from item where name=@name";
+                            AddParameter(command, "@name", name);
+
+                            scalar = command.ExecuteScalar();
+                        }
+
+                        if (scalar != null && scalar != DBNull.Value)
+                        {
+                            number = (long)scalar;
+                        }
+                        else
+                        {
+                            using (IDbCommand command = CreateCommand())
+                            {
+                                command.CommandText = "insert into item(name) values(@name);select last_insert_rowid();";
+                                AddParameter(command, "@name", name);
+
+                                scalar = command.ExecuteScalar();
+                            }
+
+                            number = (long)scalar;
+                        }
+
+                        _itemNumbers[name] = number;
+                    });
+
+                    _itemNumbers.Add(name, -1);
+                }
+            }
+
+            private void AddAttribute(string itemName, string attributeName, string value, bool withReplace)
+            {
+                EnsureItem(itemName);
+
+                if (withReplace)
+                {
+                    AddAction(() =>
+                    {
+                        using (IDbCommand command = CreateCommand())
+                        {
+                            command.CommandText = "delete from attribute where inum=@inum and name=@name";
+                            AddParameter(command, "@inum", _itemNumbers[itemName]);
+                            AddParameter(command, "@name", attributeName);
+
+                            command.ExecuteNonQuery();
+                        }
+                    });
+                }
+
+                AddAction(() =>
+                {
+                    using (IDbCommand command = CreateCommand())
+                    {
+                        command.CommandText = "insert or replace into attribute(inum, name, value) values(@inum, @name, @value)";
+                        AddParameter(command, "@inum", _itemNumbers[itemName]);
+                        AddParameter(command, "@name", attributeName);
                         AddParameter(command, "@value", value);
 
                         command.ExecuteNonQuery();
@@ -319,6 +419,18 @@ namespace Stratosphere.Table.FileSystem
                         action(builder);
                         builder.Complete();
                     }
+                }
+            }
+        }
+
+        public void BatchPut(Action<IBatchPutWriter> action)
+        {
+            using (IDbConnection connectin = EnsureConnection())
+            {
+                using (BatchPutBuilder builder = new BatchPutBuilder(connectin))
+                {
+                    action(builder);
+                    builder.Complete();
                 }
             }
         }

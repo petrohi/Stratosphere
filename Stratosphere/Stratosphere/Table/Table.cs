@@ -8,6 +8,7 @@ namespace Stratosphere.Table
     public interface ITable
     {
         void Put(string name, Action<IPutWriter> action);
+        void BatchPut(Action<IBatchPutWriter> action);
         void Delete(string name, Action<IDeleteWriter> action);
 
         IReader Select(IEnumerable<string> attributeNames, Condition condition, bool withConsistency);

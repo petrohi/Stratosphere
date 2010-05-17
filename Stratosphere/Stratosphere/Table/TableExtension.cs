@@ -22,32 +22,75 @@ namespace Stratosphere.Table
         {
             if (!string.IsNullOrEmpty(itemName))
             {
-                KeyValuePair<string, string>[] putAttributes = itemData.Where(
+                var putAttributes = itemData.Where(
                     pair => !string.IsNullOrEmpty(pair.Value)).ToArray();
 
-                string[] deleteAttributeKeys = itemData.Where(
+                string[] deleteAttributeNames = itemData.Where(
                     pair => string.IsNullOrEmpty(pair.Value)).Select(pair => pair.Key).ToArray();
 
                 if (putAttributes.Length != 0)
                 {
                     table.Put(itemName, w =>
                     {
-                        foreach (KeyValuePair<string, string> attribute in putAttributes)
+                        foreach (var attribute in putAttributes)
                         {
                             w.ReplaceAttribute(attribute.Key, attribute.Value);
                         }
                     });
                 }
 
-                if (deleteAttributeKeys.Length != 0)
+                if (deleteAttributeNames.Length != 0)
                 {
                     table.Delete(itemName, w =>
                     {
-                        foreach (string key in deleteAttributeKeys)
+                        foreach (string name in deleteAttributeNames)
                         {
-                            w.DeleteAttribute(key);
+                            w.DeleteAttribute(name);
                         }
                     });
+                }
+            }
+        }
+
+        public static void Set<T>(this ITable table, IEnumerable<KeyValuePair<string, T>> items)
+            where T : IEnumerable<KeyValuePair<string, string>>, new()
+        {
+            var batchPutItems = items.Select(item =>
+                new KeyValuePair<string, KeyValuePair<string, string>[]>(item.Key, item.Value.Where(
+                    pair => !string.IsNullOrEmpty(pair.Value)).ToArray())).Where(item => item.Value.Length != 0).ToArray();
+
+            var deleteItems = items.Select(item =>
+                 new KeyValuePair<string, string[]>(item.Key, item.Value.Where(
+                     pair => string.IsNullOrEmpty(pair.Value)).Select(pair => pair.Key).ToArray())).Where(item => item.Value.Length != 0).ToArray();
+
+            if (batchPutItems.Length != 0)
+            {
+                table.BatchPut(w =>
+                {
+                    foreach (var item in batchPutItems)
+                    {
+                        foreach (var attribute in item.Value)
+                        {
+                            w.ReplaceAttribute(item.Key, attribute.Key, attribute.Value);
+                        }
+                    }
+                });
+            }
+
+            if (deleteItems.Length != 0)
+            {
+                foreach (var item in deleteItems)
+                {
+                    if (item.Value.Length != 0)
+                    {
+                        table.Delete(item.Key, w =>
+                        {
+                            foreach (var name in item.Value)
+                            {
+                                w.DeleteAttribute(name);
+                            }
+                        });
+                    }
                 }
             }
         }

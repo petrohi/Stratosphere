@@ -6,10 +6,10 @@ namespace Stratosphere.Table
 {
     public sealed class ExpectationException : Exception
     {
-        public ExpectationException() : base(Message) { }
+        public ExpectationException() : base(DefaultMessage) { }
 
-        public ExpectationException(Exception inner) : base(Message, inner) { }
+        public ExpectationException(Exception inner) : base(DefaultMessage, inner) { }
 
-        private const string Message = "Expectations violated";
+        private const string DefaultMessage = "Expectations violated";
     }
 }

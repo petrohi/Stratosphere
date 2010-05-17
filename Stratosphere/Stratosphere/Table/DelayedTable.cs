@@ -23,6 +23,12 @@ namespace Stratosphere.Table
             _table.Put(name, action);
         }
 
+        public void BatchPut(Action<IBatchPutWriter> action)
+        {
+            Delay();
+            _table.BatchPut(action);
+        }
+
         public void Delete(string name, Action<IDeleteWriter> action)
         {
             Delay();

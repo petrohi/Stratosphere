@@ -137,6 +137,55 @@ namespace Stratosphere.Table.Sdb
             }
         }
 
+        private class BatchPutBuilder : DomainActionBuilder, IBatchPutWriter
+        {
+            private int _attributeIndex;
+            private Dictionary<string, int> _itemIndexes = new Dictionary<string, int>();
+
+            public BatchPutBuilder(string domainName)
+                : base("BatchPutAttributes", domainName)
+            {
+            }
+
+            public void ReplaceAttribute(string itemName, string attributeName, string value)
+            {
+                AddAttribute(EnsureItem(itemName), attributeName, value, true);
+            }
+
+            public void AddAttribute(string itemName, string attributeName, string value)
+            {
+                AddAttribute(EnsureItem(itemName), attributeName, value, false);
+            }
+
+            public void AddAttribute(int itemIndex, string attributeName, string value, bool withReplace)
+            {
+                Add(string.Format("Item.{0}.Attribute.{1}.Name", itemIndex, _attributeIndex), attributeName);
+                Add(string.Format("Item.{0}.Attribute.{1}.Value", itemIndex, _attributeIndex), value);
+
+                if (withReplace)
+                {
+                    Add(string.Format("Item.{0}.Attribute.{1}.Replace", itemIndex, _attributeIndex), TrueString);
+                }
+
+                _attributeIndex++;
+            }
+
+            private int EnsureItem(string name)
+            {
+                int index;
+
+                if (!_itemIndexes.TryGetValue(name, out index))
+                {
+                    index = _itemIndexes.Count;
+                    _itemIndexes.Add(name, index);
+
+                    Add(string.Format("Item.{0}.ItemName", index), name);
+                }
+
+                return index;
+            }
+        }
+
         private class ItemBuilder : DomainActionBuilder
         {
             public ItemBuilder(string action, string domainName, string name)
@@ -183,14 +232,23 @@ namespace Stratosphere.Table.Sdb
 
             public void ReplaceAttribute(string name, string value)
             {
-                Add(string.Format("Attribute.{0}.Replace", _attributeIndex), TrueString);
-                AddAttribute(name, value);
+                AddAttribute(name, value, true);
             }
 
             public void AddAttribute(string name, string value)
             {
+                AddAttribute(name, value, false);
+            }
+
+            public void AddAttribute(string name, string value, bool withReplace)
+            {
                 Add(string.Format("Attribute.{0}.Name", _attributeIndex), name);
                 Add(string.Format("Attribute.{0}.Value", _attributeIndex), value);
+
+                if (withReplace)
+                {
+                    Add(string.Format("Attribute.{0}.Replace", _attributeIndex), TrueString);
+                }
 
                 _attributeIndex++;
             }
@@ -207,15 +265,19 @@ namespace Stratosphere.Table.Sdb
 
             public void DeleteAttribute(string name)
             {
-                Add(string.Format("Attribute.{0}.Name", _attributeIndex), name);
-
-                _attributeIndex++;
+                DeleteAttribute(name, string.Empty);
             }
 
             public void DeleteAttribute(string name, string value)
             {
-                Add(string.Format("Attribute.{0}.Value", _attributeIndex), value);
-                DeleteAttribute(name);
+                Add(string.Format("Attribute.{0}.Name", _attributeIndex), name);
+
+                if (!string.IsNullOrEmpty(value))
+                {
+                    Add(string.Format("Attribute.{0}.Value", _attributeIndex), value);
+                }
+
+                _attributeIndex++;
             }
         }
 
@@ -232,6 +294,18 @@ namespace Stratosphere.Table.Sdb
 
                 _service.ExecuteWithExpectation(builder);
             }
+        }
+
+        public void BatchPut(Action<IBatchPutWriter> action)
+        {
+            BatchPutBuilder builder = new BatchPutBuilder(_domainName);
+
+            if (action != null)
+            {
+                action(builder);
+            }
+
+            _service.Execute(builder);
         }
 
         public void Delete(string name, Action<IDeleteWriter> action)

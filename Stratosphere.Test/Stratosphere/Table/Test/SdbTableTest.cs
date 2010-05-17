@@ -37,6 +37,11 @@ namespace Stratosphere.Table.Test
                 AmazonReliability.Execute(() => { _table.Put(name, action); });
             }
 
+            public void BatchPut(Action<IBatchPutWriter> action)
+            {
+                AmazonReliability.Execute(() => { _table.BatchPut(action); });
+            }
+
             public void Delete(string name, System.Action<IDeleteWriter> action)
             {
                 AmazonReliability.Execute(() => { _table.Delete(name, action); });

@@ -222,7 +222,7 @@ namespace Stratosphere.Table.Test
             AssertPairs(es, "e1", Pair("Y", "B"), Pair("YY", "BB"), Pair("YYY", "BBB"));
             AssertPairs(es, "e2", Pair("Z", "C"), Pair("ZZ", "CC"), Pair("ZZZ", "CCC"));
 
-            t.Set("e0", new Element(Pairs(Pair("X", "A1"), Pair("XXXX", "AAAA"), Pair("XXXXX", null))));
+            t.Set("e0", new Element(Pairs(Pair("X", "A1"), Pair("XXXX", "AAAA"), Pair("XXXXX", (string)null))));
             t.Set("e1", new Element(Pairs(Pair("YY", "BB1"), Pair("YYY", "BBB1"), Pair("YYYY", string.Empty))));
             t.Set("e2", new Element(Pairs(Pair("Z", string.Empty), Pair("ZZZ", "CCC1"))));
 
@@ -235,7 +235,7 @@ namespace Stratosphere.Table.Test
 
             t.Set("e0", new Element(Pairs(Pair("X", "A2"), Pair("XXXX", "AAAA1"))));
             t.Set("e1", new Element(Pairs(Pair("YYYY", "BBBB"), Pair("YYY", "BBB2"))));
-            t.Set("e2", new Element(Pairs(Pair("ZZ", string.Empty), Pair("ZZZ", null))));
+            t.Set("e2", new Element(Pairs(Pair("ZZ", string.Empty), Pair("ZZZ", (string)null))));
 
             es = t.Get<Element>();
 
@@ -244,14 +244,14 @@ namespace Stratosphere.Table.Test
             AssertPairs(es, "e1", Pair("Y", "B"), Pair("YY", "BB1"), Pair("YYY", "BBB2"), Pair("YYYY", "BBBB"));
 
             t.Set("e0", new Element(Pairs(Pair("X", string.Empty), Pair("XX", string.Empty), Pair("XXX", string.Empty), Pair("XXXX", string.Empty))));
-            t.Set("e1", new Element(Pairs(Pair("Y", null), Pair("YY", null), Pair("YYY", null))));
+            t.Set("e1", new Element(Pairs(Pair("Y", (string)null), Pair("YY", (string)null), Pair("YYY", (string)null))));
 
             es = t.Get<Element>();
 
             AssertIdentities(es, "e1");
             AssertPairs(es, "e1", Pair("YYYY", "BBBB"));
 
-            t.Set("e1", new Element(Pairs(Pair("YYYY", null))));
+            t.Set("e1", new Element(Pairs(Pair("YYYY", (string)null))));
 
             es = t.Get<Element>();
 
@@ -869,14 +869,14 @@ namespace Stratosphere.Table.Test
             }
         }
 
-        private static IEnumerable<KeyValuePair<string, string>> Pairs(params KeyValuePair<string, string>[] ps)
+        private static IEnumerable<KeyValuePair<T, V>> Pairs<T, V>(params KeyValuePair<T, V>[] ps)
         {
             return ps;
         }
 
-        private static KeyValuePair<string, string> Pair(string key, string value)
+        private static KeyValuePair<T, V> Pair<T, V>(T key, V value)
         {
-            return new KeyValuePair<string, string>(key, value);
+            return new KeyValuePair<T, V>(key, value);
         }
     }
 }
