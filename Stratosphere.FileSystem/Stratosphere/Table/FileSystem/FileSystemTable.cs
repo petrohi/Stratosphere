@@ -119,6 +119,11 @@ namespace Stratosphere.Table.FileSystem
 
             public void WhenExpected(string name, string value)
             {
+                if (string.IsNullOrEmpty(name))
+                {
+                    throw new ArgumentException();
+                }
+
                 AddAction(() =>
                 {
                     using (IDbCommand command = CreateCommand())
@@ -138,6 +143,11 @@ namespace Stratosphere.Table.FileSystem
 
             public void WhenExpectedNotExists(string name)
             {
+                if (string.IsNullOrEmpty(name))
+                {
+                    throw new ArgumentException();
+                }
+
                 AddAction(() =>
                 {
                     using (IDbCommand command = CreateCommand())
@@ -172,6 +182,11 @@ namespace Stratosphere.Table.FileSystem
 
             private void AddAttribute(string name, string value, bool withReplace)
             {
+                if (string.IsNullOrEmpty(name))
+                {
+                    throw new ArgumentException();
+                }
+
                 if (withReplace)
                 {
                     AddAction(() =>
@@ -221,6 +236,11 @@ namespace Stratosphere.Table.FileSystem
 
             private void EnsureItem(string name)
             {
+                if (string.IsNullOrEmpty(name))
+                {
+                    throw new ArgumentException();
+                }
+
                 if (!_itemNumbers.ContainsKey(name))
                 {
                     AddAction(() =>
@@ -262,6 +282,11 @@ namespace Stratosphere.Table.FileSystem
 
             private void AddAttribute(string itemName, string attributeName, string value, bool withReplace)
             {
+                if (string.IsNullOrEmpty(attributeName))
+                {
+                    throw new ArgumentException();
+                }
+
                 EnsureItem(itemName);
 
                 if (withReplace)
@@ -315,6 +340,11 @@ namespace Stratosphere.Table.FileSystem
 
             public void DeleteAttribute(string name)
             {
+                if (string.IsNullOrEmpty(name))
+                {
+                    throw new ArgumentException();
+                }
+
                 AddAction(() =>
                 {
                     using (IDbCommand command = CreateCommand())
@@ -330,6 +360,11 @@ namespace Stratosphere.Table.FileSystem
 
             public void DeleteAttribute(string name, string value)
             {
+                if (string.IsNullOrEmpty(name))
+                {
+                    throw new ArgumentException();
+                }
+
                 AddAction(() =>
                 {
                     using (IDbCommand command = CreateCommand())
@@ -867,7 +902,7 @@ namespace Stratosphere.Table.FileSystem
             }
         }
 
-        public IReader Select(IEnumerable<string> attributeNames, Condition condition, bool withConsistency)
+        public IReader Select(IEnumerable<string> attributeNames, Condition condition, bool? withConsistency, int? selectLimit)
         {
             return new Reader(EnsureConnection(), attributeNames, condition);
         }

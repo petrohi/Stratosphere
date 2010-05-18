@@ -11,7 +11,7 @@ namespace Stratosphere.Table
         void BatchPut(Action<IBatchPutWriter> action);
         void Delete(string name, Action<IDeleteWriter> action);
 
-        IReader Select(IEnumerable<string> attributeNames, Condition condition, bool withConsistency);
+        IReader Select(IEnumerable<string> attributeNames, Condition condition, bool? withConsistency, int? selectLimit);
 
         void Delete();
     }

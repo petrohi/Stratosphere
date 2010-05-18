@@ -11,7 +11,9 @@ namespace Stratosphere.Table.Test
     public abstract class SdbTableTestBase : TableTest
     {
         private const string DomainNameFormat = "unit_test{0}";
+
         protected const int DelayMilliseconds = 1000;
+        protected const int SelectLimit = 2;
 
         protected string GetNextDomainName()
         {
@@ -47,9 +49,9 @@ namespace Stratosphere.Table.Test
                 AmazonReliability.Execute(() => { _table.Delete(name, action); });
             }
 
-            public IReader Select(IEnumerable<string> attributeNames, Condition condition, bool withConsistency)
+            public IReader Select(IEnumerable<string> attributeNames, Condition condition, bool? withConsistency, int? selectLimit)
             {
-                return AmazonReliability.Execute(() => _table.Select(attributeNames, condition, withConsistency));
+                return AmazonReliability.Execute(() => _table.Select(attributeNames, condition, withConsistency, selectLimit));
             }
         }
     }
@@ -60,19 +62,37 @@ namespace Stratosphere.Table.Test
         {
             return AmazonReliability.Execute(() => new ReliableSdbTable(new DelayedTable(SdbTable.Create(
                 AmazonTest.ServiceId, AmazonTest.ServiceSecret,
-                GetNextDomainName(), null),DelayMilliseconds)));
+                GetNextDomainName(), false, null),DelayMilliseconds)));
         }
     }
 
     public sealed class SdbTableTestWithSelectLimit : SdbTableTestBase
     {
-        private const int SelectLimit = 2;
-
         protected override ITable CreateTable()
         {
             return AmazonReliability.Execute(() => new ReliableSdbTable(new DelayedTable(SdbTable.Create(
                 AmazonTest.ServiceId, AmazonTest.ServiceSecret,
-                GetNextDomainName(), SelectLimit), DelayMilliseconds)));
+                GetNextDomainName(), false, SelectLimit), DelayMilliseconds)));
+        }
+    }
+
+    public sealed class SdbTableTestWithConsistency : SdbTableTestBase
+    {
+        protected override ITable CreateTable()
+        {
+            return AmazonReliability.Execute(() => new ReliableSdbTable(SdbTable.Create(
+                AmazonTest.ServiceId, AmazonTest.ServiceSecret,
+                GetNextDomainName(), true, null)));
+        }
+    }
+
+    public sealed class SdbTableTestWithSelectLimitAndConsistency : SdbTableTestBase
+    {
+        protected override ITable CreateTable()
+        {
+            return AmazonReliability.Execute(() => new ReliableSdbTable(SdbTable.Create(
+                AmazonTest.ServiceId, AmazonTest.ServiceSecret,
+                GetNextDomainName(), true, SelectLimit)));
         }
     }
 }

@@ -544,7 +544,7 @@ namespace Stratosphere.Command
         {
             SdbTable table;
 
-            if (SdbTable.TryCreate(ServiceId, ServiceSecret, domainName, null, false, out table))
+            if (SdbTable.TryCreate(ServiceId, ServiceSecret, domainName, false, null, false, out table))
             {
                 table.Delete();
 
@@ -600,7 +600,7 @@ namespace Stratosphere.Command
         {
             SdbTable table;
 
-            if (SdbTable.TryCreate(ServiceId, ServiceSecret, domainName, null, false, out table))
+            if (SdbTable.TryCreate(ServiceId, ServiceSecret, domainName, false, null, false, out table))
             {
                 using (IReader reader = table.Select(new string[] { }, null))
                 {
@@ -824,7 +824,7 @@ namespace Stratosphere.Command
             long writtenCount = 0;
             SdbTable table;
 
-            if (SdbTable.TryCreate(ServiceId, ServiceSecret, domainName, null, false, out table))
+            if (SdbTable.TryCreate(ServiceId, ServiceSecret, domainName, false, null, false, out table))
             {
                 long expectedCount;
                 long sizeBytes;

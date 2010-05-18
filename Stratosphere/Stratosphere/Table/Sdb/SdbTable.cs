@@ -13,6 +13,7 @@ namespace Stratosphere.Table.Sdb
     {
         private readonly SdbService _service;
         private readonly string _domainName;
+        private readonly bool _withConsistency;
         private readonly int? _selectLimit;
 
         private class ListDomainsBuilder : AmazonActionBuilder
@@ -29,17 +30,22 @@ namespace Stratosphere.Table.Sdb
 
         public static IEnumerable<SdbTable> ListTables(string serviceId, string serviceSecret)
         {
-            return ListTables(serviceId, serviceSecret, null);
+            return ListTables(serviceId, serviceSecret, false);
         }
 
-        public static IEnumerable<SdbTable> ListTables(string serviceId, string serviceSecret, int? selectLimit)
+        public static IEnumerable<SdbTable> ListTables(string serviceId, string serviceSecret, bool withConsistency)
+        {
+            return ListTables(serviceId, serviceSecret, withConsistency, null);
+        }
+
+        public static IEnumerable<SdbTable> ListTables(string serviceId, string serviceSecret, bool withConsistency, int? selectLimit)
         {
             SdbService service = new SdbService(serviceId, serviceSecret);
             XElement responseElement = service.Execute(new ListDomainsBuilder());
 
             foreach (string domainName in responseElement.Descendants(Sdb + "DomainName").Select(n => n.Value))
             {
-                yield return new SdbTable(service, domainName, selectLimit);
+                yield return new SdbTable(service, domainName, withConsistency, selectLimit);
             }
         }
 
@@ -55,30 +61,40 @@ namespace Stratosphere.Table.Sdb
 
         public static SdbTable Get(string serviceId, string serviceSecret, string domainName)
         {
-            return Get(serviceId, serviceSecret, domainName, null);
+            return Get(serviceId, serviceSecret, domainName, false);
         }
 
-        public static SdbTable Get(string serviceId, string serviceSecret, string domainName, int? selectLimit)
+        public static SdbTable Get(string serviceId, string serviceSecret, string domainName, bool withConsistency)
         {
-            return new SdbTable(new SdbService(serviceId, serviceSecret), domainName, selectLimit);
+            return Get(serviceId, serviceSecret, domainName, withConsistency, null);
+        }
+
+        public static SdbTable Get(string serviceId, string serviceSecret, string domainName, bool withConsistency, int? selectLimit)
+        {
+            return new SdbTable(new SdbService(serviceId, serviceSecret), domainName, withConsistency, selectLimit);
         }
 
         public static SdbTable Create(string serviceId, string serviceSecret, string domainName)
         {
-            return Create(serviceId, serviceSecret, domainName, null);
+            return Create(serviceId, serviceSecret, domainName, false);
         }
 
-        public static SdbTable Create(string serviceId, string serviceSecret, string domainName, int? selectLimit)
+        public static SdbTable Create(string serviceId, string serviceSecret, string domainName, bool withConsistency)
+        {
+            return Create(serviceId, serviceSecret, domainName, withConsistency, null);
+        }
+
+        public static SdbTable Create(string serviceId, string serviceSecret, string domainName, bool withConsistency, int? selectLimit)
         {
             SdbService service = new SdbService(serviceId, serviceSecret);
-            return Create(service, domainName, selectLimit); ;
+            return Create(service, domainName, withConsistency, selectLimit); ;
         }
 
-        public static SdbTable Create(string serviceId, string serviceSecret, string domainName, int? selectLimit, bool ensureDomain)
+        public static SdbTable Create(string serviceId, string serviceSecret, string domainName, bool withConsistency, int? selectLimit, bool ensureDomain)
         {
             SdbTable table;
 
-            if (TryCreate(serviceId, serviceSecret, domainName, selectLimit, ensureDomain, out table))
+            if (TryCreate(serviceId, serviceSecret, domainName, withConsistency, selectLimit, ensureDomain, out table))
             {
                 return table;
             }
@@ -86,20 +102,20 @@ namespace Stratosphere.Table.Sdb
             return null;
         }
 
-        public static bool TryCreate(string serviceId, string serviceSecret, string domainName, int? selectLimit, bool ensureDomain, out SdbTable table)
+        public static bool TryCreate(string serviceId, string serviceSecret, string domainName, bool withConsistency, int? selectLimit, bool ensureDomain, out SdbTable table)
         {
             SdbService service = new SdbService(serviceId, serviceSecret);
             XElement responseElement = service.Execute(new ListDomainsBuilder());
 
             if (responseElement.Descendants(Sdb + "DomainName").Select(n => n.Value).Contains(domainName))
             {
-                table = new SdbTable(service, domainName, selectLimit);
+                table = new SdbTable(service, domainName, withConsistency, selectLimit);
                 return true;
             }
 
             if (ensureDomain)
             {
-                table = Create(service, domainName, selectLimit);
+                table = Create(service, domainName, withConsistency, selectLimit);
                 return true;
             }
 
@@ -486,9 +502,9 @@ namespace Stratosphere.Table.Sdb
             }
         }
 
-        public IReader Select(IEnumerable<string> attributeNames, Condition condition, bool withConsistency)
+        public IReader Select(IEnumerable<string> attributeNames, Condition condition, bool? withConsistency, int? selectLimit)
         {
-            return new Reader(SelectElements(attributeNames, condition, withConsistency));
+            return new Reader(SelectElements(attributeNames, condition, withConsistency, selectLimit));
         }
 
         private class SelectBuilder : AmazonActionBuilder
@@ -510,9 +526,10 @@ namespace Stratosphere.Table.Sdb
             }
         }
 
-        private IEnumerable<XElement> SelectElements(IEnumerable<string> attributeNames, Condition condition, bool withConsistency)
+        private IEnumerable<XElement> SelectElements(IEnumerable<string> attributeNames, Condition condition, bool? withConsistency, int? selectLimit)
         {
-            return SelectElements(_service, BuildSelectExpression(_domainName, attributeNames, condition, _selectLimit), withConsistency);
+            return SelectElements(_service, BuildSelectExpression(_domainName, attributeNames, condition,
+                selectLimit.HasValue ? selectLimit : _selectLimit), withConsistency.HasValue ? withConsistency.Value : _withConsistency);
         }
 
         private static string BuildSelectExpression(string domainName, IEnumerable<string> attributeNames, Condition condition, int? selectLimit)
@@ -784,16 +801,17 @@ namespace Stratosphere.Table.Sdb
 
         public string Name { get { return _domainName; } }
 
-        private static SdbTable Create(SdbService service, string domainName, int? selectLimit)
+        private static SdbTable Create(SdbService service, string domainName, bool withConsistency, int? selectLimit)
         {
             service.Execute(new CreateDomainBuilder(domainName));
-            return new SdbTable(service, domainName, selectLimit);
+            return new SdbTable(service, domainName, withConsistency, selectLimit);
         }
 
-        private SdbTable(SdbService service, string domainName, int? selectLimit)
+        private SdbTable(SdbService service, string domainName, bool withConsistency, int? selectLimit)
         {
             _service = service;
             _domainName = domainName;
+            _withConsistency = withConsistency;
             _selectLimit = selectLimit;
         }
 

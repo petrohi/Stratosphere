@@ -328,6 +328,138 @@ namespace Stratosphere.Table.Test
         }
 
         [Fact]
+        public void SetDeleteEmpty()
+        {
+            ITable t = _table;
+
+            var es = t.Get<Element>();
+            AssertIdentities(es);
+
+            t.Set("e0", new Element(), true);
+            t.Set("e1", new Element(), true);
+            t.Set("e2", new Element(), true);
+
+            es = t.Get<Element>();
+
+            AssertIdentities(es);
+
+            t.Set("e0", new Element(Pairs(Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA"))), true);
+            t.Set("e1", new Element(Pairs(Pair("Y", "B"), Pair("YY", "BB"), Pair("YYY", "BBB"))), true);
+            t.Set("e2", new Element(Pairs(Pair("Z", "C"), Pair("ZZ", "CC"), Pair("ZZZ", "CCC"))), true);
+
+            es = t.Get<Element>();
+
+            AssertIdentities(es, "e0", "e1", "e2");
+            AssertPairs(es, "e0", Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA"));
+            AssertPairs(es, "e1", Pair("Y", "B"), Pair("YY", "BB"), Pair("YYY", "BBB"));
+            AssertPairs(es, "e2", Pair("Z", "C"), Pair("ZZ", "CC"), Pair("ZZZ", "CCC"));
+
+            t.Set("e0", new Element(Pairs(Pair("X", "A1"), Pair("XXXX", "AAAA"), Pair("XXXXX", (string)null))), true);
+            t.Set("e1", new Element(Pairs(Pair("YY", "BB1"), Pair("YYY", "BBB1"), Pair("YYYY", string.Empty))), true);
+            t.Set("e2", new Element(Pairs(Pair("Z", string.Empty), Pair("ZZZ", "CCC1"))), true);
+
+            es = t.Get<Element>();
+
+            AssertIdentities(es, "e0", "e1", "e2");
+            AssertPairs(es, "e0", Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"), Pair("XXXX", "AAAA"));
+            AssertPairs(es, "e1", Pair("Y", "B"), Pair("YY", "BB1"), Pair("YYY", "BBB1"));
+            AssertPairs(es, "e2", Pair("ZZ", "CC"), Pair("ZZZ", "CCC1"));
+
+            t.Set("e0", new Element(Pairs(Pair("X", "A2"), Pair("XXXX", "AAAA1"))), true);
+            t.Set("e1", new Element(Pairs(Pair("YYYY", "BBBB"), Pair("YYY", "BBB2"))), true);
+            t.Set("e2", new Element(Pairs(Pair("ZZ", string.Empty), Pair("ZZZ", (string)null))), true);
+
+            es = t.Get<Element>();
+
+            AssertIdentities(es, "e0", "e1");
+            AssertPairs(es, "e0", Pair("X", "A2"), Pair("XX", "AA"), Pair("XXX", "AAA"), Pair("XXXX", "AAAA1"));
+            AssertPairs(es, "e1", Pair("Y", "B"), Pair("YY", "BB1"), Pair("YYY", "BBB2"), Pair("YYYY", "BBBB"));
+
+            t.Set("e0", new Element(Pairs(Pair("X", string.Empty), Pair("XX", string.Empty), Pair("XXX", string.Empty), Pair("XXXX", string.Empty))), true);
+            t.Set("e1", new Element(Pairs(Pair("Y", (string)null), Pair("YY", (string)null), Pair("YYY", (string)null))), true);
+
+            es = t.Get<Element>();
+
+            AssertIdentities(es, "e1");
+            AssertPairs(es, "e1", Pair("YYYY", "BBBB"));
+
+            t.Set("e1", new Element(Pairs(Pair("YYYY", (string)null))), true);
+
+            es = t.Get<Element>();
+
+            AssertIdentities(es);
+        }
+
+        [Fact]
+        public void SetBatchDeleteEmpty()
+        {
+            ITable t = _table;
+
+            var es = t.Get<Element>();
+            AssertIdentities(es);
+
+            t.Set(Pairs(
+                Pair("e0", new Element()),
+                Pair("e1", new Element()),
+                Pair("e2", new Element())), true);
+
+            es = t.Get<Element>();
+
+            AssertIdentities(es);
+
+            t.Set(Pairs(
+                Pair("e0", new Element(Pairs(Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA")))),
+                Pair("e1", new Element(Pairs(Pair("Y", "B"), Pair("YY", "BB"), Pair("YYY", "BBB")))),
+                Pair("e2", new Element(Pairs(Pair("Z", "C"), Pair("ZZ", "CC"), Pair("ZZZ", "CCC"))))), true);
+
+            es = t.Get<Element>();
+
+            AssertIdentities(es, "e0", "e1", "e2");
+            AssertPairs(es, "e0", Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA"));
+            AssertPairs(es, "e1", Pair("Y", "B"), Pair("YY", "BB"), Pair("YYY", "BBB"));
+            AssertPairs(es, "e2", Pair("Z", "C"), Pair("ZZ", "CC"), Pair("ZZZ", "CCC"));
+
+            t.Set(Pairs(
+                Pair("e0", new Element(Pairs(Pair("X", "A1"), Pair("XXXX", "AAAA"), Pair("XXXXX", (string)null)))),
+                Pair("e1", new Element(Pairs(Pair("YY", "BB1"), Pair("YYY", "BBB1"), Pair("YYYY", string.Empty)))),
+                Pair("e2", new Element(Pairs(Pair("Z", string.Empty), Pair("ZZZ", "CCC1"))))), true);
+
+            es = t.Get<Element>();
+
+            AssertIdentities(es, "e0", "e1", "e2");
+            AssertPairs(es, "e0", Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"), Pair("XXXX", "AAAA"));
+            AssertPairs(es, "e1", Pair("Y", "B"), Pair("YY", "BB1"), Pair("YYY", "BBB1"));
+            AssertPairs(es, "e2", Pair("ZZ", "CC"), Pair("ZZZ", "CCC1"));
+
+            t.Set(Pairs(
+                Pair("e0", new Element(Pairs(Pair("X", "A2"), Pair("XXXX", "AAAA1")))),
+                Pair("e1", new Element(Pairs(Pair("YYYY", "BBBB"), Pair("YYY", "BBB2")))),
+                Pair("e2", new Element(Pairs(Pair("ZZ", string.Empty), Pair("ZZZ", (string)null))))), true);
+
+            es = t.Get<Element>();
+
+            AssertIdentities(es, "e0", "e1");
+            AssertPairs(es, "e0", Pair("X", "A2"), Pair("XX", "AA"), Pair("XXX", "AAA"), Pair("XXXX", "AAAA1"));
+            AssertPairs(es, "e1", Pair("Y", "B"), Pair("YY", "BB1"), Pair("YYY", "BBB2"), Pair("YYYY", "BBBB"));
+
+            t.Set(Pairs(
+                Pair("e0", new Element(Pairs(Pair("X", string.Empty), Pair("XX", string.Empty), Pair("XXX", string.Empty), Pair("XXXX", string.Empty)))),
+                Pair("e1", new Element(Pairs(Pair("Y", (string)null), Pair("YY", (string)null), Pair("YYY", (string)null))))), true);
+
+            es = t.Get<Element>();
+
+            AssertIdentities(es, "e1");
+            AssertPairs(es, "e1", Pair("YYYY", "BBBB"));
+
+            t.Set(Pairs(
+                Pair("e1", new Element(Pairs(Pair("YYYY", (string)null))))), true);
+
+            es = t.Get<Element>();
+
+            AssertIdentities(es);
+        }
+
+        [Fact]
         public void Count()
         {
             ITable t = _table;

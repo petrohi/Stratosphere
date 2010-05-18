@@ -14,10 +14,12 @@ namespace Stratosphere.Table.Sdb
             XElement domainName = configuration.Element(XName.Get("DomainName"));
             XElement ensureDomain = configuration.Element(XName.Get("EnsureDomain"));
             XElement selectLimit = configuration.Element(XName.Get("SelectLimit"));
+            XElement withConsistency = configuration.Element(XName.Get("WithConsistency"));
 
             if (serviceId != null && serviceSecret != null && domainName != null)
             {
                 return Create(serviceId.Value, serviceSecret.Value, domainName.Value,
+                    withConsistency != null ? XmlConvert.ToBoolean(withConsistency.Value) : false,
                     selectLimit != null ? (int?)XmlConvert.ToInt32(selectLimit.Value) : null,
                     ensureDomain != null ? XmlConvert.ToBoolean(ensureDomain.Value) : false);
             }
