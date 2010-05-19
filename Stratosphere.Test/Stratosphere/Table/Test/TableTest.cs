@@ -460,7 +460,37 @@ namespace Stratosphere.Table.Test
         }
 
         [Fact]
-        public void Count()
+        public void SelectItemName()
+        {
+            ITable t = _table;
+
+            string[] es = t.Select(Condition.WithItemName("e0")).ToArray();
+            Assert.Equal(0, es.Length);
+
+            es = t.Select(Condition.WithItemName("e1")).ToArray();
+            Assert.Equal(0, es.Length);
+
+            t.Set("e0", new Element(Pairs(Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"))));
+            t.Set("e1", new Element(Pairs(Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"))));
+            t.Set("e2", new Element(Pairs(Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"))));
+
+            es = t.Select(Condition.WithItemName("e0")).ToArray();
+            Assert.Equal(1, es.Length);
+            Assert.Equal("e0", es[0]);
+
+            es = t.Select(Condition.WithItemName("e1")).ToArray();
+            Assert.Equal(1, es.Length);
+            Assert.Equal("e1", es[0]);
+
+            es = t.Select().ToArray();
+            Assert.Equal(3, es.Length);
+            Assert.True(es.Contains("e0"));
+            Assert.True(es.Contains("e1"));
+            Assert.True(es.Contains("e2"));
+        }
+
+        [Fact]
+        public void SelectCount()
         {
             ITable t = _table;
 
@@ -503,30 +533,6 @@ namespace Stratosphere.Table.Test
             es = t.Get<Element>(Condition.WithItemName("e1"));
             AssertIdentities(es, "e1");
             AssertPairs(es, "e1", Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"));
-        }
-
-        [Fact]
-        public void GetItemNameByItemName()
-        {
-            ITable t = _table;
-
-            var es = t.Get<Element>(new string[] { TableExtension.ItemNameAttribute }, Condition.WithItemName("e0"));
-            AssertIdentities(es);
-
-            es = t.Get<Element>(new string[] { TableExtension.ItemNameAttribute }, Condition.WithItemName("e1"));
-            AssertIdentities(es);
-
-            t.Set("e0", new Element(Pairs(Pair("X", "A"), Pair("XX", "AA"), Pair("XXX", "AAA1"))));
-            t.Set("e1", new Element(Pairs(Pair("X", "A"), Pair("XX", "AA1"), Pair("XXX", "AAA"))));
-            t.Set("e2", new Element(Pairs(Pair("X", "A1"), Pair("XX", "AA"), Pair("XXX", "AAA"))));
-
-            es = t.Get<Element>(new string[] { TableExtension.ItemNameAttribute }, Condition.WithItemName("e0"));
-            AssertIdentities(es, "e0");
-            AssertPairs(es, "e0");
-
-            es = t.Get<Element>(new string[] { TableExtension.ItemNameAttribute }, Condition.WithItemName("e1"));
-            AssertIdentities(es, "e1");
-            AssertPairs(es, "e1");
         }
 
         [Fact]

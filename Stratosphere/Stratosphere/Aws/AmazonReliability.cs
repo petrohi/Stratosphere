@@ -13,12 +13,14 @@ namespace Stratosphere.Aws
         private const string ServiceUnavailableCode = "ServiceUnavailable";
         private const string RequestThrottledCode = "RequestThrottled";
         private const string RequestTimeoutCode = "RequestTimeout";
+        private const string InternalErrorCode = "InternalError";
         
         private static readonly IEnumerable<string> RerunCodes = new string[]
         {
             ServiceUnavailableCode, 
             RequestThrottledCode, 
-            RequestTimeoutCode
+            RequestTimeoutCode,
+            InternalErrorCode
         };
 
         private static readonly IEnumerable<WebExceptionStatus> RerunStatuses = new WebExceptionStatus[]
