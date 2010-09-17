@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2010 7Clouds
+// Copyright (c) 2010 7Clouds
 
 using System;
 using System.Collections.Generic;
@@ -727,8 +727,6 @@ namespace Stratosphere.Table.FileSystem
             private string ContinueBuildAttributeConditionWhereClause(IDbCommand command, AttributeCondition condition, bool everyAttribute)
             {
                 AttributeValueCondition valueCondition;
-                AttributeIsNullCondition isNullCondition;
-                AttributeIsNotNullCondition isNotNullCondition;
                 AttributeValueBetweenCondition valueBetweenCondition;
                 AttributeValueInCondition valueInCondition;
 
@@ -743,12 +741,12 @@ namespace Stratosphere.Table.FileSystem
                     return string.Format("i.num in (select a.inum from attribute a where a.name={0} and a.value{1}{2})",
                         nameParameterName, GetValueTestOperator(valueCondition.Test), valueParameterName);
                 }
-                else if ((isNullCondition = condition as AttributeIsNullCondition) != null)
+                else if ((condition as AttributeIsNullCondition) != null)
                 {
                     return string.Format("i.num not in (select a.inum from attribute a where a.name={0})",
                         nameParameterName);
                 }
-                else if ((isNotNullCondition = condition as AttributeIsNotNullCondition) != null)
+                else if ((condition as AttributeIsNotNullCondition) != null)
                 {
                     return string.Format("i.num in (select a.inum from attribute a where a.name={0})",
                         nameParameterName);

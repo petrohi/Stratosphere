@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2010 7Clouds
+// Copyright (c) 2010 7Clouds
 
 using System;
 using System.Collections.Generic;
@@ -200,6 +200,8 @@ namespace Stratosphere.Table.Sdb
 
                 return index;
             }
+
+            public bool IsEmpty { get { return (_attributeIndex == 0); } }
         }
 
         private class ItemBuilder : DomainActionBuilder
@@ -268,16 +270,27 @@ namespace Stratosphere.Table.Sdb
 
                 _attributeIndex++;
             }
+
+            public bool IsEmpty { get { return (_attributeIndex == 0); } }
         }
 
         private class DeleteItemBuilder : ExpectedItemBuilder, IDeleteWriter
         {
             private int _attributeIndex;
+            private bool _deletingItem;
 
             public DeleteItemBuilder(string domainName, string name)
                 : base("DeleteAttributes", domainName, name) { }
 
-            public void DeleteItem() { }
+            public void DeleteItem()
+            {
+                if (_attributeIndex != 0)
+                {
+                    throw new ArgumentException("Writer is deleting attributes");
+                }
+
+                _deletingItem = true;
+            }
 
             public void DeleteAttribute(string name)
             {
@@ -286,6 +299,11 @@ namespace Stratosphere.Table.Sdb
 
             public void DeleteAttribute(string name, string value)
             {
+                if (_deletingItem)
+                {
+                    throw new ArgumentException("Writer is deleting item");
+                }
+
                 Add(string.Format("Attribute.{0}.Name", _attributeIndex), name);
 
                 if (!string.IsNullOrEmpty(value))
@@ -295,6 +313,8 @@ namespace Stratosphere.Table.Sdb
 
                 _attributeIndex++;
             }
+
+            public bool IsEmpty { get { return (!_deletingItem && _attributeIndex == 0); } }
         }
 
         public void Put(string name, Action<IPutWriter> action)
@@ -308,7 +328,10 @@ namespace Stratosphere.Table.Sdb
                     action(builder);
                 }
 
-                _service.ExecuteWithExpectation(builder);
+                if (!builder.IsEmpty)
+                {
+                    _service.ExecuteWithExpectation(builder);
+                }
             }
         }
 
@@ -321,7 +344,10 @@ namespace Stratosphere.Table.Sdb
                 action(builder);
             }
 
-            _service.Execute(builder);
+            if (!builder.IsEmpty)
+            {
+                _service.Execute(builder);
+            }
         }
 
         public void Delete(string name, Action<IDeleteWriter> action)
@@ -335,7 +361,10 @@ namespace Stratosphere.Table.Sdb
                     action(builder);
                 }
 
-                _service.ExecuteWithExpectation(builder);
+                if (!builder.IsEmpty)
+                {
+                    _service.ExecuteWithExpectation(builder);
+                }
             }
         }
 
