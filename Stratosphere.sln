@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual C# Express 2010
+# Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stratosphere", "Stratosphere\Stratosphere.csproj", "{150ED8D5-5084-4BBB-A45A-9AE63C6BB8D7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stratosphere.FileSystem", "Stratosphere.FileSystem\Stratosphere.FileSystem.csproj", "{92DD8E9C-24D9-4E14-A142-94FB9C0EA311}"
@@ -29,26 +29,6 @@ Global
 		{150ED8D5-5084-4BBB-A45A-9AE63C6BB8D7}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{150ED8D5-5084-4BBB-A45A-9AE63C6BB8D7}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{150ED8D5-5084-4BBB-A45A-9AE63C6BB8D7}.Release|x86.ActiveCfg = Release|Any CPU
-		{92DD8E9C-24D9-4E14-A142-94FB9C0EA311}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{92DD8E9C-24D9-4E14-A142-94FB9C0EA311}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{92DD8E9C-24D9-4E14-A142-94FB9C0EA311}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{92DD8E9C-24D9-4E14-A142-94FB9C0EA311}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{92DD8E9C-24D9-4E14-A142-94FB9C0EA311}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{92DD8E9C-24D9-4E14-A142-94FB9C0EA311}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{92DD8E9C-24D9-4E14-A142-94FB9C0EA311}.Release|Any CPU.Build.0 = Release|Any CPU
-		{92DD8E9C-24D9-4E14-A142-94FB9C0EA311}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{92DD8E9C-24D9-4E14-A142-94FB9C0EA311}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{92DD8E9C-24D9-4E14-A142-94FB9C0EA311}.Release|x86.ActiveCfg = Release|Any CPU
-		{3C29CB0B-6F17-4D0C-91DA-9E8AF6ACF828}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3C29CB0B-6F17-4D0C-91DA-9E8AF6ACF828}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3C29CB0B-6F17-4D0C-91DA-9E8AF6ACF828}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{3C29CB0B-6F17-4D0C-91DA-9E8AF6ACF828}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{3C29CB0B-6F17-4D0C-91DA-9E8AF6ACF828}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{3C29CB0B-6F17-4D0C-91DA-9E8AF6ACF828}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3C29CB0B-6F17-4D0C-91DA-9E8AF6ACF828}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3C29CB0B-6F17-4D0C-91DA-9E8AF6ACF828}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{3C29CB0B-6F17-4D0C-91DA-9E8AF6ACF828}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{3C29CB0B-6F17-4D0C-91DA-9E8AF6ACF828}.Release|x86.ActiveCfg = Release|Any CPU
 		{2B50848C-87C4-44A7-AA05-9C1DBF790680}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{2B50848C-87C4-44A7-AA05-9C1DBF790680}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
 		{2B50848C-87C4-44A7-AA05-9C1DBF790680}.Debug|Mixed Platforms.Build.0 = Debug|x86
@@ -59,6 +39,42 @@ Global
 		{2B50848C-87C4-44A7-AA05-9C1DBF790680}.Release|Mixed Platforms.Build.0 = Release|x86
 		{2B50848C-87C4-44A7-AA05-9C1DBF790680}.Release|x86.ActiveCfg = Release|x86
 		{2B50848C-87C4-44A7-AA05-9C1DBF790680}.Release|x86.Build.0 = Release|x86
+		{3C29CB0B-6F17-4D0C-91DA-9E8AF6ACF828}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C29CB0B-6F17-4D0C-91DA-9E8AF6ACF828}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C29CB0B-6F17-4D0C-91DA-9E8AF6ACF828}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{3C29CB0B-6F17-4D0C-91DA-9E8AF6ACF828}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{3C29CB0B-6F17-4D0C-91DA-9E8AF6ACF828}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3C29CB0B-6F17-4D0C-91DA-9E8AF6ACF828}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C29CB0B-6F17-4D0C-91DA-9E8AF6ACF828}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C29CB0B-6F17-4D0C-91DA-9E8AF6ACF828}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{3C29CB0B-6F17-4D0C-91DA-9E8AF6ACF828}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{3C29CB0B-6F17-4D0C-91DA-9E8AF6ACF828}.Release|x86.ActiveCfg = Release|Any CPU
+		{92DD8E9C-24D9-4E14-A142-94FB9C0EA311}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92DD8E9C-24D9-4E14-A142-94FB9C0EA311}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92DD8E9C-24D9-4E14-A142-94FB9C0EA311}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{92DD8E9C-24D9-4E14-A142-94FB9C0EA311}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{92DD8E9C-24D9-4E14-A142-94FB9C0EA311}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{92DD8E9C-24D9-4E14-A142-94FB9C0EA311}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92DD8E9C-24D9-4E14-A142-94FB9C0EA311}.Release|Any CPU.Build.0 = Release|Any CPU
+		{92DD8E9C-24D9-4E14-A142-94FB9C0EA311}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{92DD8E9C-24D9-4E14-A142-94FB9C0EA311}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{92DD8E9C-24D9-4E14-A142-94FB9C0EA311}.Release|x86.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = Stratosphere\Stratosphere.csproj
+		Policies = $0
+		$0.TextStylePolicy = $1
+		$1.inheritsSet = null
+		$1.scope = text/x-csharp
+		$0.CSharpFormattingPolicy = $2
+		$2.inheritsSet = Mono
+		$2.inheritsScope = text/x-csharp
+		$2.scope = text/x-csharp
+		$0.TextStylePolicy = $3
+		$3.FileWidth = 120
+		$3.inheritsSet = VisualStudio
+		$3.inheritsScope = text/plain
+		$3.scope = text/plain
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
