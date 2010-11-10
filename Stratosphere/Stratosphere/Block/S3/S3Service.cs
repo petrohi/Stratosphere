@@ -25,35 +25,36 @@ namespace Stratosphere.Block.S3
         {
             return CreateRequest(method, string.Empty);
         }
-
+        
         public WebRequest CreateRequest(string method, string containerName)
         {
-            return CreateRequest(method, containerName, string.Empty);
+            return CreateRequest(method, containerName, string.Empty, string.Empty);
         }
-
-        public WebRequest CreateRequest(string method, string containerName, string blockName)
+        
+        public WebRequest CreateRequest(string method, string containerName, string query, string blockName)
         {
-            return CreateRequest(method, containerName, blockName, string.Empty, string.Empty);
+            return CreateRequest(method, containerName, query, blockName, string.Empty, string.Empty);
         }
-
-        public WebRequest CreateRequest(string method, string containerName, string blockName, string contentMD5, string contentType)
+        
+        public WebRequest CreateRequest(string method, string containerName, string query, string blockName, string contentMD5, string contentType)
         {
-            return CreateRequest(method, containerName, blockName, contentMD5, contentType, EmptyHeaders, null);
+            return CreateRequest(method, containerName, query, blockName, contentMD5, contentType, EmptyHeaders, null);
         }
-
-        public WebRequest CreateRequest(string method, string containerName, string blockName, string contentMD5, string contentType, IEnumerable<KeyValuePair<string, string>> headers, Action<Stream> action)
+        
+        public WebRequest CreateRequest(string method, string containerName, string query, string blockName, string contentMD5,
+            string contentType, IEnumerable<KeyValuePair<string, string>> headers, Action<Stream> action)
         {
             Uri uri;
-
+            
             if (string.IsNullOrEmpty(containerName))
             {
                 uri = new Uri("http://s3.amazonaws.com");
             }
             else
             {
-                uri = new Uri(string.Format("http://{0}.s3.amazonaws.com/{1}", containerName, blockName));
+                uri = new Uri(string.Format("http://{0}.s3.amazonaws.com/{1}{2}", containerName, blockName, query));
             }
-
+            
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
             request.Method = method;
 

@@ -55,6 +55,7 @@
     <Compile Include="Stratosphere\Queue\FileSystem\FileSystemQueue.cs" />
     <Compile Include="Stratosphere\Table\FileSystem\FileSystemTable.Configure.cs" />
     <Compile Include="Stratosphere\Table\FileSystem\FileSystemTable.cs" />
+    <Compile Include="Stratosphere\Block\FileSystem\FileSystemBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\External\SQLite\3.6.23.1\sqlite3.dll">

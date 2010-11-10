@@ -5,7 +5,7 @@ using System;
 
 namespace Stratosphere.Block.FileSystem
 {
-    public sealed class FileSystemBlock : IBlock
+    public sealed class FileSystemBlock : FileSystemBase, IBlock
     {
         public FileSystemBlock(string fileName)
         {
@@ -14,7 +14,7 @@ namespace Stratosphere.Block.FileSystem
 
         private readonly string _fileName;
 
-        public string Name { get { return Path.GetFileName(_fileName); } }
+        public string Name { get { return DecodeName(Path.GetFileName(_fileName)); } }
         public DateTime LastModifiedDate { get { return File.GetLastWriteTimeUtc(_fileName); } }
         public long SizeBytes { get { return new FileInfo(_fileName).Length; } }
 

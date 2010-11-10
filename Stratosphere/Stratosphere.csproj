@@ -89,6 +89,7 @@
     <Compile Include="Stratosphere\Table\TableExtension.cs" />
     <Compile Include="Stratosphere\Worker\Worker.cs" />
     <Compile Include="Stratosphere\Worker\WorkerInstance.cs" />
+    <Compile Include="Stratosphere\Block\ContainerExtension.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\zip.cmd">

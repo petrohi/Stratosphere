@@ -31,7 +31,7 @@ namespace Stratosphere.Block.S3
         {
             try
             {
-                GetResponse(_service.CreateRequest(GetMethod, _containerName, _name), action);
+                GetResponse(_service.CreateRequest(GetMethod, _containerName, string.Empty, _name), action);
             }
             catch (WebException e)
             {
@@ -53,12 +53,12 @@ namespace Stratosphere.Block.S3
 
         public void Write(Action<Stream> action)
         {
-            GetResponse(_service.CreateRequest(PutMethod, _containerName, _name, string.Empty, string.Empty, EmptyHeaders, action));
+            GetResponse(_service.CreateRequest(PutMethod, _containerName, string.Empty, _name, string.Empty, string.Empty, EmptyHeaders, action));
         }
 
         public void Delete()
         {
-            GetResponse(_service.CreateRequest(DeleteMethod, _containerName, _name));
+            GetResponse(_service.CreateRequest(DeleteMethod, _containerName, string.Empty, _name));
         }
     }
 }

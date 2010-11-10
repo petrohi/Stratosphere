@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -47,16 +48,42 @@ namespace Stratosphere.Block.S3
         public string Name { get { return _name; } }
         public DateTime CreationDate { get { return _creationDate; } }
 
-        public IEnumerable<IBlock> ListBlocks()
+        public IEnumerable<IBlock> ListBlocks(string prefix, int pageSize)
         {
-            XElement response = GetResponse(_service.CreateRequest(GetMethod, _name));
-
-            return response.Descendants(S3 + "Contents").Select(o => (IBlock)new S3Block(
-                _service,
-                _name,
-                o.Element(S3 + "Key").Value,
-                XmlConvert.ToDateTime(o.Element(S3 + "LastModified").Value, XmlDateTimeSerializationMode.Utc),
-                XmlConvert.ToInt64(o.Element(S3 + "Size").Value)));
+            bool isTruncated = false;
+            string markerName = null;
+            
+            do
+            {
+                StringBuilder queryBuilder = new StringBuilder("?max-keys=");
+                queryBuilder.Append(pageSize);
+                
+                if (!string.IsNullOrEmpty(prefix))
+                {
+                    queryBuilder.AppendFormat("&prefix={0}", prefix);
+                }
+                
+                if (!string.IsNullOrEmpty(markerName))
+                {
+                    queryBuilder.AppendFormat("&marker={0}", markerName);
+                }
+                
+                XElement response = GetResponse(_service.CreateRequest(GetMethod, _name, queryBuilder.ToString(), string.Empty));
+                isTruncated = XmlConvert.ToBoolean(response.Element(S3 + "IsTruncated").Value);
+                
+                foreach (IBlock block in response.Elements(S3 + "Contents").Select(o => (IBlock)new S3Block(
+                    _service,
+                    _name,
+                    o.Element(S3 + "Key").Value,
+                    XmlConvert.ToDateTime(o.Element(S3 + "LastModified").Value, XmlDateTimeSerializationMode.Utc),
+                    XmlConvert.ToInt64(o.Element(S3 + "Size").Value))))
+                {
+                    yield return block;
+                    
+                    markerName = block.Name;
+                }
+            }
+            while (isTruncated);
         }
 
         public IBlock GetBlock(string name) { return new S3Block(_service, _name, name, DateTime.MinValue, 0); }

@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Stratosphere.Block.FileSystem
 {
-    public sealed partial class FileSystemContainer : IContainer
+    public sealed partial class FileSystemContainer : FileSystemBase, IContainer
     {
         public static FileSystemContainer Create(string directoryName)
         {
@@ -32,16 +32,23 @@ namespace Stratosphere.Block.FileSystem
         public string Name { get { return _directoryName; } }
         public DateTime CreationDate { get { return _creationDate; } }
 
-        public IEnumerable<IBlock> ListBlocks()
+        public IEnumerable<IBlock> ListBlocks(string prefix, int pageSize)
         {
-            return Directory.GetFiles(_directoryName).Select(fn => (IBlock)new FileSystemBlock(fn));
+            if (string.IsNullOrEmpty(prefix))
+            {
+                return Directory.GetFiles(_directoryName).Select(fn => (IBlock)new FileSystemBlock(fn));
+            }
+            else
+            {
+                return Directory.GetFiles(_directoryName, EncodeName(prefix) + "*").Select(fn => (IBlock)new FileSystemBlock(fn));
+            }
         }
-
+        
         public IBlock GetBlock(string name)
         {
-            return new FileSystemBlock(Path.Combine(_directoryName, name));
+            return new FileSystemBlock(Path.Combine(_directoryName, EncodeName(name)));
         }
-
+        
         public void Delete()
         {
             if (Directory.Exists(_directoryName))

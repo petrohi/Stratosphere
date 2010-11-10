@@ -10,7 +10,7 @@ namespace Stratosphere.Block
         string Name { get; }
         DateTime CreationDate { get; }
 
-        IEnumerable<IBlock> ListBlocks();
+        IEnumerable<IBlock> ListBlocks(string prefix, int pageSize);
         IBlock GetBlock(string name);
 
         void Delete();
